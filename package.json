@@ -1,0 +1,14 @@
+{
+  "name": "visualize_realize",
+  "version": "1.0.0",
+  "description": "Creates fruit tree visualization of github repository.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrbrendanwong/visualize_realize.git"
+  },
+  "author": "BETA Team"
+}
