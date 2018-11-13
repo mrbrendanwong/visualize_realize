@@ -1,0 +1,32 @@
+Fullstack JS
+
+1. Grab GitHub data
+   -Commits          : Branch nodes
+   -Lines changed    : Fruit colour
+   -Classes changed  : Fruits
+   -Branches         : Branches
+   -Merges           : Flowers
+   -Contributor
+
+2. Parse data into data structure
+   -List of sequential commit objects
+
+3. Render
+   -D3.js
+
+Decide commit object data structure tomorrow night
+Thomas : Node server
+
+Host it on AWS/Heroku (stretch)
+
+Week 1 - Until Nov 17
+Decide data structures
+Finish backend
+Render a tree
+
+Week 2 - Until Nov 24
+Render some fruits
+Finish coding/testing
+
+Last bit - Until Nov 27
+Finish filming / movie editing
