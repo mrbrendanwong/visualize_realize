@@ -1,0 +1,44 @@
+
+root: "initial sha"
+
+could also have a hash for commit: [child1, child2]
+
+could keep track of dates to render commits chronologically (don't know if git returns commits in order. haven't checked)
+
+[commit1, commit2, ...]
+
+commit obj
+
+To find the branch a commit belongs to
+https://stackoverflow.com/questions/29992441/github-api-identify-the-branches-that-contain-a-given-commit
+
+
+sha: {
+	parent: "sha",
+	branch: "master",
+	date: "" // if we don't have ordering when pulling data / sort before parsing object
+	isMerge: ""
+	changes: [
+		{
+			file/class: "Main.java", // regex match .java?
+			lines: [{start: 1, count: 10, isAddition: true}, {...}], // then update the below struct
+
+		}
+	],
+	contributor: "",
+}
+
+struct to keep track of which line numbers added by which commit so we can render dependency animations
+{
+	file: {
+		lines: [{start: 1, end: 10, commit: "sha1"}, {start: 12, end: 25, commit: "sha2"}],
+		//commitRefs: {
+		//	sha: 2 // 0 means the commit has been completely overwritten
+		//}
+	}
+}
+
+struct to keep track of which files are related to a commit. Redundant to the above. When array empty, fruit completely changes colour
+{
+	sha: [file1, file2]
+}
