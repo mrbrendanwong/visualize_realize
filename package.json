@@ -10,5 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/mrbrendanwong/visualize_realize.git"
   },
-  "author": "BETA Team"
+  "author": "BETA Team",
+  "dependencies": {
+    "@octokit/rest": "^15.17.0"
+  }
 }

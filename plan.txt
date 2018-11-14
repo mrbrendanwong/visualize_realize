@@ -1,12 +1,17 @@
 Fullstack JS
 
 1. Grab GitHub data
+   Idea: Frooty Tree
+   We literally draw a tree that spawns fruit based on commits
    -Commits          : Branch nodes
    -Lines changed    : Fruit colour
    -Classes changed  : Fruits
    -Branches         : Branches
    -Merges           : Flowers
    -Contributor
+
+   Alternative: Fyre Werk
+   - We shoot Fireworks up into the sky based on commits and stuff
 
 2. Parse data into data structure
    -List of sequential commit objects
