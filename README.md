@@ -1,5 +1,5 @@
 Using `node 10.13.0`
 
-Requires octokit
+Requires `octokit`
 
-Run with `npm start -- [repo url here]` or at least it'll do this eventually kek
+Run with `npm start`
