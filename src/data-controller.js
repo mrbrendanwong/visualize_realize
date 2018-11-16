@@ -1,6 +1,7 @@
 const octokit = require('@octokit/rest')({debug: true});
 
-module.exports = {getContributors, getContent, getBranches, getBranchCommits, getCommit, getCommitComments, getBlob};
+module.exports = {getContributors, getContent, getBranches, getBranchCommits,
+    getCommit, getCommitComments, getBlob, getAllContent};
 
 // Get the contributors of a repository
 async function getContributors(owner, repo) {
@@ -14,12 +15,23 @@ async function getContributors(owner, repo) {
 }
 
 // Get the contents of a GitHub repository. To get root path, just supply empty string
-// To get all files; call root, scan for all dirs, recursively call getContent
 async function getContent(owner, repo, path) {
     let result;
     try {
         result = await octokit.repos.getContent({owner: owner, repo: repo, path: path});
         console.log(result);
+    } catch (e) {
+        console.error("HttpError", e);
+    }
+}
+
+// Get all contents of a GitHub repository
+async function getAllContent(owner, repo) {
+    let result;
+    try {
+        result = await octokit.gitdata.getTree({owner: owner, repo: repo, tree_sha: "104a670906b9c72a2e6720ef7f6d7f0679bfcb9a", recursive: 1});
+        console.log(result);
+        //console.log(result.data)
     } catch (e) {
         console.error("HttpError", e);
     }
@@ -80,4 +92,3 @@ async function getBlob(owner, repo, file_sha) {
         console.error("HttpError", e);
     }
 }
-
