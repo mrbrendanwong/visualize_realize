@@ -9,6 +9,8 @@ async function getContributors(owner, repo) {
     try {
         result = await octokit.repos.getContributors({owner: owner, repo: repo, anon: "true"});
         console.log(result);
+
+        return result;
     } catch (e) {
         console.error("HttpError", e);
     }
@@ -20,6 +22,8 @@ async function getContent(owner, repo, path) {
     try {
         result = await octokit.repos.getContent({owner: owner, repo: repo, path: path});
         console.log(result);
+
+        return result;
     } catch (e) {
         console.error("HttpError", e);
     }
@@ -30,8 +34,10 @@ async function getAllContent(owner, repo) {
     let result;
     try {
         result = await octokit.gitdata.getTree({owner: owner, repo: repo, tree_sha: "104a670906b9c72a2e6720ef7f6d7f0679bfcb9a", recursive: 1});
-        console.log(result);
+        //console.log(result);
         //console.log(result.data)
+
+        return result;
     } catch (e) {
         console.error("HttpError", e);
     }

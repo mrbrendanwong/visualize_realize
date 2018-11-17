@@ -1,10 +1,21 @@
-function processContributers(raw) {
+module.exports = {processContributors, processContent, processBranches, processCommits,
+    processCommitComments, processBlob};
+
+function processContributors(raw) {
     /*
     Iterate through array. Save all contributor names to a list
 
     Relevant data:
         raw.data[<index>].login
     */
+    let contributorsData = [];
+
+    for (var i = 0; i < raw.data.length; i++) {
+        contributorsData.push(raw.data[i].login);
+    }
+
+    console.log("Contributor data:");
+    console.log(contributorsData);
 }
 
 function processContent(raw) {
@@ -16,6 +27,22 @@ function processContent(raw) {
         raw.data.tree[<index>].path
         raw.data.tree[<index>].sha
     */
+    let fileData = {};
+
+    for (var i = 0; i < raw.data.tree.length; i++) {
+        currObj = raw.data.tree[i];
+        if (currObj.type === "blob" && currObj.path.endsWith(".java")) {
+            let fileName = currObj.path.split("/").pop();
+            let fileSha = currObj.sha;
+            let fileMeta = {}
+
+            fileMeta["sha"] = fileSha;
+            fileData[fileName] = fileMeta;
+        }
+    }
+
+    console.log("File data:");
+    console.log(fileData);
 }
 
 function processBranches(raw) {

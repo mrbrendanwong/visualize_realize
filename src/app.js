@@ -21,16 +21,17 @@ server.listen(port, hostname, () => {
 
 // Testing
 const dc = require('./data-controller');
+const dp = require('./data-processor');
 var owner = "mrbrendanwong";
 var repo = "beta_engine";
 
 //dc.getContent(owner, repo, "");
-//dc.getAllContent(owner, repo);
-//dc.getContributors(owner, repo);
+dc.getAllContent(owner, repo).then(raw => dp.processContent(raw));
+//dc.getContributors(owner, repo).then(raw => dp.processContributors(raw));
 //dc.getBranches(owner, repo);
 //dc.getBranchCommits(owner, repo, "");
 //dc.getCommitComments(owner, repo, "85fcc360b59c2177b497577445ed3c882ce7a327");
-dc.getCommit(owner, repo, "85fcc360b59c2177b497577445ed3c882ce7a327");
+//dc.getCommit(owner, repo, "85fcc360b59c2177b497577445ed3c882ce7a327");
 //dc.getBlob(owner, repo, "ed32d72ad00cbb23e35daac1c0896ef5f17dbe40");
 
 console.log("(✿╹◡╹) VERSACE");
