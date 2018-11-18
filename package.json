@@ -4,7 +4,7 @@
   "description": "Creates fruit tree visualization of github repository.",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node src/app.js"
   },
   "repository": {
     "type": "git",

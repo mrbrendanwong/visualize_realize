@@ -7,7 +7,7 @@ Fullstack JS
    -Lines changed    : Fruit colour
    -Classes changed  : Fruits
    -Branches         : Branches
-   -Merges           : Flowers
+   -Merges           : Flowers; Only possible if commit message references a merge
    -Contributor
 
    Alternative: Fyre Werk
