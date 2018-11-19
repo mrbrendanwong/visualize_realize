@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>BoidsCanvas</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <!-- Live version hosted at: http://codepen.io/MikeC1995/pen/RWXoOe -->
+    <div id="boids-canvas"></div>
+    <div>
+      <img id="dogImg" src="dog.png">
+    </div>
+
+    <!-- ******  RESOURCES ****** -->
+    <!-- BOIDS -->
+    <script type="text/javascript" src="vec2.js"></script>
+    <script type="text/javascript" src="boids.js"></script>
+    <!-- INIT -->
+    <script type="text/javascript">
+      var canvasDiv = document.getElementById('boids-canvas');
+      var options = {
+        background: '#ecf0f1',
+        density: 'low',
+        speed: 'slow',
+        interactive: true,
+        mixedSizes: true,
+        boidColours: ["#34495e", "#e74c3c", '#2ecc71', '#9b59b6', '#f1c40f', '#1abc9c']
+      };
+      var boidsCanvas = new BoidsCanvas(canvasDiv, options);
+    </script>
+  </body>
+</html>
