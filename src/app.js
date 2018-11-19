@@ -33,7 +33,7 @@ function createDir(dirName) {
 function initDirs() {
     createDir(config.tmpDir);
     createDir(config.tmpDir + config.commitDir);
-    createDir(config.tmpDir + config.repoDir);    
+    createDir(config.tmpDir + config.repoDir);
 }
 
 initDirs();
