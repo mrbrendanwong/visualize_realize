@@ -1,7 +1,14 @@
 const octokit = require('@octokit/rest')({debug: true});
 
-module.exports = {getContributors, getContent, getBranches, getBranchCommits,
-    getCommit, getCommitComments, getBlob, getAllContent};
+// Too many API calls, so got a personal access token from git
+// May consider a downloading different library like nodegit instead of making
+// a lot of requests to github per commit for the state of the files
+const apiKey = require('../api_key.json').key;
+
+octokit.authenticate({
+    type: 'oauth',
+    token: apiKey
+});
 
 // Get the contributors of a repository
 async function getContributors(owner, repo) {
@@ -89,7 +96,10 @@ async function getCommitComments(owner, repo, commit_sha) {
 }
 
 // Get a the blob of a file. Need to process decode blob from Base64
-async function getBlob(owner, repo, file_sha) {
+async function getBlob(owner, repo, fileName, file_sha) {
+    /*
+    console.log("hey")
+    console.log(file_sha)
     let result;
     try {
         result = await octokit.gitdata.getBlob({owner, repo, file_sha});
@@ -97,4 +107,24 @@ async function getBlob(owner, repo, file_sha) {
     } catch (e) {
         console.error("HttpError", e);
     }
+    */
+   return new Promise((resolve, reject) => {
+    octokit.gitdata.getBlob({owner, repo, file_sha})
+        .then(result => {
+            resolve({
+                fileName: fileName,
+                raw: result,
+            })
+        });
+   });
+    /*
+   console.log("hey")
+   console.log(file_sha)
+
+   let test = await octokit.gitdata.getBlob({owner: owner, repo: repo, file_sha: file_sha});
+   console.log(test)
+   */
 }
+
+module.exports = {getContributors, getContent, getBranches, getBranchCommits,
+    getCommit, getCommitComments, getBlob, getAllContent};

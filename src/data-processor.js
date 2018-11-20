@@ -1,6 +1,3 @@
-module.exports = {processContributors, processContent, processBranches, processCommits,
-    processCommitComments, processBlob};
-
 function processContributors(raw) {
     /*
     Iterate through array. Save all contributor names to a list
@@ -43,6 +40,7 @@ function processContent(raw) {
 
     console.log("File data:");
     console.log(fileData);
+    return fileData;
 }
 
 function processBranches(raw) {
@@ -75,8 +73,14 @@ function processCommitComments() {
     */
 }
 
-function processBlob() {
+function processBlob(raw) {
     /*
-    Currently unsure of purpose
+    Returns a buffer with decoded blob (file contents) to be used with quality checker later
     */
+    let encoded = raw.data.content;
+    let result = Buffer.from(encoded, 'base64');
+    return result;
 }
+
+module.exports = {processContributors, processContent, processBranches, processCommits,
+    processCommitComments, processBlob};
