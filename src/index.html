@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doids</title>
+</head>
+
+<script language="JavaScript" src="../node_modules/howler/dist/howler.js"></script>
+<script>
+    let bark = new Howl({
+        src: ['./resources/bark.mp3']
+    });
+
+    function playBark() {
+        bark.play();
+    }
+
+    playBark();
+</script>
+
+<body>
+</body>
+</html>
