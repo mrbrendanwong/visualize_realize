@@ -10,6 +10,12 @@ const papaparseConfig = {
 };
 let problemsFound = [];
 
+/**
+ * Uses PMD to check the Java code in the sourceDirectory, finds all the problems from the rule set
+ * and outputs it into the JSON file at outputFileLocation for the front-end to read later
+ * @param {string} sourceDirectory reads code from here
+ * @param {string} outputFileLocation location of the output JSON file
+ */
 function checkCode(sourceDirectory, outputFileLocation) {
     const pmd = spawn('resources/pmd/bin/run.sh',
         ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
