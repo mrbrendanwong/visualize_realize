@@ -14,33 +14,45 @@ let problemsFound = [];
 
 /**
  * Uses PMD to check the Java code in the sourceDirectory, finds all the problems from the rule set
- * and outputs it into the JSON file at outputFileLocation for the front-end to read later
- * @param {string} sourceDirectory reads code from here
- * @param {string} outputFileLocation location of the output JSON file
+ * and outputs it into the JSON file at outputFileLocation for the front-end to read later,
+ * returns a promise to indicate when it's done or what errors there were
+ * @param {String} sourceDirectory reads code from here
+ * @param {String} outputFileLocation location of the output JSON file
+ * @returns {Promise}
  */
 function checkCode(sourceDirectory, outputFileLocation) {
-    const pmd = spawn('resources/pmd/bin/run.sh',
-        ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
-            '-f', 'csv', '-failOnViolation', 'false']);
+    return new Promise((resolve, reject) => {
+        const pmd = spawn('resources/pmd/bin/run.sh',
+            ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
+                '-f', 'csv', '-failOnViolation', 'false']);
 
-    let csvStream = pmd.stdout.pipe(Papa.parse(Papa.NODE_STREAM_INPUT, papaparseConfig));
-    csvStream.on('data', (problem) => {
-        problemsFound.push(problem);
-    });
-
-    pmd.stderr.on('data', (data) => {
-        console.log(`stderr: ${data}`);
-    });
-
-    pmd.on('close', (code) => {
-        console.log(`pmd child process exited with code ${code}`);
-        fs.writeFile(outputFileLocation, JSON.stringify(problemsFound), (error) => {
-            error ? console.log(error) : null;
+        let csvStream = pmd.stdout.pipe(Papa.parse(Papa.NODE_STREAM_INPUT, papaparseConfig));
+        csvStream.on('data', (problem) => {
+            problemsFound.push(problem);
         });
-    });
+
+        pmd.stderr.on('data', (data) => {
+            console.log(`stderr: ${data}`);
+        });
+
+        pmd.on('close', (code) => {
+            console.log(`pmd child process exited with code ${code}`);
+            fs.writeFile(outputFileLocation, JSON.stringify(problemsFound), (error) => {
+                if (error) {
+                    reject(error);
+                }
+            });
+            resolve();
+        });
+    })
 }
 
+/**
+ * Gets the number of times a class in mentioned in another class for all Java files in sourceDirectory
+ * @param {String} sourceDirectory reads code from here
+ */
 function processCouplingMetric(sourceDirectory) {
+    let promises = [];
     let metrics = [];
     let fileNames = [];
     for (const file of walkSync(sourceDirectory)) {
@@ -49,25 +61,36 @@ function processCouplingMetric(sourceDirectory) {
         }
     }
     fileNames.forEach((currFile) => {
-        const currFileClassName = path.parse(currFile).base.split('.')[0];
-        metrics[currFileClassName] = {};
-        const rl = readline.createInterface({
-            input: fs.createReadStream(currFile),
-            crlfDelay: Infinity
-        });
-        rl.on('line', (line) => {
-            fileNames.forEach((calledFile) => {
-                if (calledFile !== currFile) {
-                    const calledFileClassName = path.parse(calledFile).base.split('.')[0];
-                    if (line.includes(calledFileClassName)) {
-                        const currMetric = metrics[currFileClassName][calledFileClassName];
-                        metrics[currFileClassName][calledFileClassName] = currMetric != undefined ? currMetric + 1 : 0;
+        let filePromise = new Promise((resolve) => {
+            const currFileClassName = path.parse(currFile).base.split('.')[0];
+            metrics[currFileClassName] = {};
+            const rl = readline.createInterface({
+                input: fs.createReadStream(currFile),
+                crlfDelay: Infinity
+            });
+            rl.on('line', (line) => {
+                fileNames.forEach((calledFile) => {
+                    if (calledFile !== currFile) {
+                        const calledFileClassName = path.parse(calledFile).base.split('.')[0];
+                        // TODO: FIX HOW COUPLING METRIC IS COMPUTED
+                        if (line.includes(calledFileClassName)) {
+                            const currMetric = metrics[currFileClassName][calledFileClassName];
+                            metrics[currFileClassName][calledFileClassName] = currMetric != undefined ? currMetric + 1 : 0;
+                        }
                     }
-                }
+                })
+            });
+            rl.on('close', () => {
+                console.log(`Done reading file ${currFile}`);
+                resolve();
             })
-        });
-        rl.on('close', () => {console.log("done reading file")})
-    })
+        })
+        promises.push(filePromise);
+    });
+    return Promise.all(promises).then(
+        () => metrics,
+        () => false
+    );
 }
 
 /**
