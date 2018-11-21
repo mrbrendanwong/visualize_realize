@@ -25,18 +25,15 @@ Boid.prototype.update = function () {
   var v1 = this.cohesion();
   var v2 = this.separation();
   var v3 = this.alignment();
-  //var v4 = this.interactivity();
 
   // Weight rules to get best behaviour
   v1 = v1.mul(new Vector(1, 1));
   v2 = v2.mul(new Vector(1, 1));
   v3 = v3.mul(new Vector(1.1, 1.1));
-  //v4 = v4.mul(new Vector(1.8, 1.8));
 
   this.applyForce(v1);
   this.applyForce(v2);
   this.applyForce(v3);
-  //this.applyForce(v4);
 
   this.velocity = this.velocity.add(this.acceleration);
   this.velocity = this.velocity.limit(this.parent.options.speed);
@@ -133,16 +130,6 @@ Boid.prototype.alignment = function () {
   }
 };
 
-/*
-Boid.prototype.interactivity = function () {
-  if(this.parent.options.interactive && this.parent.mousePos !== undefined &&
-     this.position.dist(this.parent.mousePos) < this.parent.visibleRadius) {
-    return this.seek(this.parent.mousePos);
-  } else {
-    return new Vector(0, 0);
-  }
-};
-*/
 
 // Implement torus boundaries
 Boid.prototype.borders = function() {
@@ -260,7 +247,6 @@ BoidsCanvas.prototype.initialiseBoids = function() {
     var min_velocity = -5;
     var velocity = new Vector(Math.floor(Math.random()*(max_velocity-min_velocity+1)+min_velocity),
                               Math.floor(Math.random()*(max_velocity-min_velocity+1)+min_velocity));
-    //var size = (this.options.mixedSizes) ? Math.floor(Math.random()*(3-1+1)+1) : 1;
     var size = Math.floor(Math.random() * (maxsize - minsize)) + minsize;
     var colourIdx = Math.floor(Math.random()*(this.options.boidColours.length-1+1));
     this.boids.push(new Boid(this, position, velocity, size, this.options.boidColours[colourIdx]));
