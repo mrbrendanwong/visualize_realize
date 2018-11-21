@@ -107,7 +107,7 @@ async function getCommitComments(owner, repo, commit_sha) {
     }
 }
 
-// Get a the blob of a file. Need to process decode blob from Base64
+// Get the blob of a file. Need to process decode blob from Base64
 function getBlob(owner, repo, fileName, file_sha) {
     return new Promise((resolve, reject) => {
         octokit.gitdata.getBlob({owner, repo, file_sha}).then(result => {

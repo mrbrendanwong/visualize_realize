@@ -76,7 +76,7 @@ function processCommits(raw) {
     Commits may require sorting based on data
 
     Relevant data:
-        commits[<index>].sha
+        raw[<index>].data.sha
 
         // When committed using website, user is web-flow, so use author property instead
         currCommit.data.committer.login
