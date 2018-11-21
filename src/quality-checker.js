@@ -1,8 +1,10 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
+const readline = require('readline');
+const path = require('path');
 const Papa = require('papaparse');
 
-module.exports = {checkCode};
+module.exports = {checkCode, processCouplingMetric};
 
 const papaparseConfig = {
     header: true,
@@ -36,4 +38,56 @@ function checkCode(sourceDirectory, outputFileLocation) {
             error ? console.log(error) : null;
         });
     });
+}
+
+function processCouplingMetric(sourceDirectory) {
+    let metrics = [];
+    let fileNames = [];
+    for (const file of walkSync(sourceDirectory)) {
+        if (file.toLowerCase().endsWith('.java')) {
+            fileNames.push(file);
+        }
+    }
+    fileNames.forEach((currFile) => {
+        const currFileClassName = path.parse(currFile).base.split('.')[0];
+        metrics[currFileClassName] = {};
+        const rl = readline.createInterface({
+            input: fs.createReadStream(currFile),
+            crlfDelay: Infinity
+        });
+        rl.on('line', (line) => {
+            fileNames.forEach((calledFile) => {
+                if (calledFile !== currFile) {
+                    const calledFileClassName = path.parse(calledFile).base.split('.')[0];
+                    if (line.includes(calledFileClassName)) {
+                        const currMetric = metrics[currFileClassName][calledFileClassName];
+                        metrics[currFileClassName][calledFileClassName] = currMetric != undefined ? currMetric + 1 : 0;
+                    }
+                }
+            })
+        });
+        rl.on('close', () => {console.log("done reading file")})
+    })
+}
+
+/**
+ * List all files in a directory recursively in a synchronous fashion
+ * FROM luciopaiva at https://gist.github.com/luciopaiva/4ba78a124704007c702d0293e7ff58dd
+ * Tweaked to only return the filename and not the path
+ *
+ * @param {String} dir
+ * @returns {IterableIterator<String>}
+ */
+function *walkSync(dir) {
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+        const pathToFile = path.join(dir, file);
+        const isDirectory = fs.statSync(pathToFile).isDirectory();
+        if (isDirectory) {
+            yield *walkSync(pathToFile);
+        } else {
+            yield pathToFile;
+        }
+    }
 }
