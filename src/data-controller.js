@@ -128,7 +128,7 @@ function getAllBlobs(owner, repo, fileData)  {
     for (var file in fileData) {
         // TODO remove
         // Limit API calls for now
-        if (file === 'Client.java') {
+        if (file === 'Client.java' || file === 'Choice.java') {
             let promise = getBlob(owner, repo, file, fileData[file].sha)
             promises.push(promise)
         }

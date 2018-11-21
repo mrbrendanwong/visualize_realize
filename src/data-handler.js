@@ -82,7 +82,7 @@ function createCommitDir(commitIndex) {
     return new Promise((resolve, reject) => {
         let path = `${config.tmpDir}/${commitIndex}`;
         fs.mkdir(path, function (err) {
-            if (err) {
+            if (err && err.code !== "EEXIST") {
                 console.error(`Failed to create commit #${commitIndex} directory`, err);
                 reject(err);
             } else {
