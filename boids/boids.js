@@ -1,4 +1,7 @@
-// Boid tempalte code: https://github.com/MikeC1995/BoidsCanvas
+// Boid template code: https://github.com/MikeC1995/BoidsCanvas
+
+var minsize = 25;
+var maxsize = 100;
 
 var Boid = function(parent, position, velocity, size, colour) {
   // Initialise the boid parameters
@@ -6,30 +9,14 @@ var Boid = function(parent, position, velocity, size, colour) {
   this.velocity = new Vector(velocity.x, velocity.y);
   this.acceleration = new Vector(0, 0);
 
-  // Check if valid colour
-  if (!(/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i).test(colour)) {
-    console.error('Please specify a valid boid hexadecimal color');
-    return false;
-  }
   this.size = size;
-  this.colour = colour;
   this.parent = parent;
 };
 
 Boid.prototype.draw = function () {
   // Draw boid
-  this.parent.ctx.beginPath();
-  this.parent.ctx.fillStyle = this.colour;
-  this.parent.ctx.globalAlpha = 0.7;
-  // var dogImg = new Image();
-  // dogImg.src = "dog.png"
-  // dogImg.onload = function() {
-  //   //this.parent.ctx.drawImage(dogImg, this.position.x, this.position.y);
-  // };
-  // this.parent.ctx.drawImage(dogImg, this.position.x, this.position.y);
-
-  this.parent.ctx.arc(this.position.x, this.position.y, this.parent.boidRadius * this.size, 0, 2 * Math.PI);
-  this.parent.ctx.fill();
+  var dogImg = document.getElementById("dogImg");
+  this.parent.ctx.drawImage(dogImg, this.position.x, this.position.y, this.size, this.size);
 };
 
 /* Update the boid positions according to Reynold's rules.
@@ -38,13 +25,13 @@ Boid.prototype.update = function () {
   var v1 = this.cohesion();
   var v2 = this.separation();
   var v3 = this.alignment();
-  var v4 = this.interactivity();
+  //var v4 = this.interactivity();
 
   // Weight rules to get best behaviour
   v1 = v1.mul(new Vector(1, 1));
   v2 = v2.mul(new Vector(1, 1));
   v3 = v3.mul(new Vector(1.1, 1.1));
-  v4 = v4.mul(new Vector(1.8, 1.8));
+  //v4 = v4.mul(new Vector(1.8, 1.8));
 
   this.applyForce(v1);
   this.applyForce(v2);
@@ -146,6 +133,7 @@ Boid.prototype.alignment = function () {
   }
 };
 
+/*
 Boid.prototype.interactivity = function () {
   if(this.parent.options.interactive && this.parent.mousePos !== undefined &&
      this.position.dist(this.parent.mousePos) < this.parent.visibleRadius) {
@@ -154,6 +142,7 @@ Boid.prototype.interactivity = function () {
     return new Vector(0, 0);
   }
 };
+*/
 
 // Implement torus boundaries
 Boid.prototype.borders = function() {
@@ -223,24 +212,11 @@ BoidsCanvas.prototype.init = function() {
     'z-index': 1
   });
 
-  // Check if valid background hex color
-  if ((/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i).test(this.options.background)) {
-    this.setStyles(this.bgDiv, {
-      'background': this.options.background
-    });
-  }
-  // Else check if valid image
-  else if ((/\.(gif|jpg|jpeg|tiff|png)$/i).test(this.options.background)) {
-    this.setStyles(this.bgDiv, {
-      'background': 'url("' + this.options.background + '") no-repeat center',
-      'background-size': 'cover'
-    });
-  }
-  // Else throw error
-  else {
-    console.error('Please specify a valid background image or hexadecimal color');
-    return false;
-  }
+  // Set background to tiled grass image
+  this.setStyles(this.bgDiv, {
+    'background-image': 'url("./grass.jpg")',
+    'background-repeat' : 'repeat',
+  });
 
   // Create canvas & context
   this.canvas = document.createElement('canvas');
@@ -270,15 +246,6 @@ BoidsCanvas.prototype.init = function() {
 
   this.initialiseBoids();
 
-  // Mouse event listeners
-  this.canvas.addEventListener('mousemove', function (e) {
-    this.mousePos = new Vector(e.clientX - this.canvas.offsetLeft,
-                               e.clientY - this.canvas.offsetTop);
-  }.bind(this));
-  this.canvas.addEventListener('mouseleave', function (e) {
-    this.mousePos = undefined;
-  }.bind(this));
-
   // Update canvas
   requestAnimationFrame(this.update.bind(this));
 };
@@ -293,7 +260,8 @@ BoidsCanvas.prototype.initialiseBoids = function() {
     var min_velocity = -5;
     var velocity = new Vector(Math.floor(Math.random()*(max_velocity-min_velocity+1)+min_velocity),
                               Math.floor(Math.random()*(max_velocity-min_velocity+1)+min_velocity));
-    var size = (this.options.mixedSizes) ? Math.floor(Math.random()*(3-1+1)+1) : 1;
+    //var size = (this.options.mixedSizes) ? Math.floor(Math.random()*(3-1+1)+1) : 1;
+    var size = Math.floor(Math.random() * (maxsize - minsize)) + minsize;
     var colourIdx = Math.floor(Math.random()*(this.options.boidColours.length-1+1));
     this.boids.push(new Boid(this, position, velocity, size, this.options.boidColours[colourIdx]));
   }
