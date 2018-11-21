@@ -66,11 +66,15 @@ async function getBranchCommits(owner, repo, branch) {
     if (branch === "") branch = "master";
     let result;
     try {
+        console.log("Fetching branch commits")
         // result = await octokit.repos.getCommits({owner: owner, repo: repo, sha: branch});
+        // Get all commits
         result = await paginate(() =>
             octokit.repos.getCommits({owner: owner, repo: repo, sha: branch}));
-        // return [result[0], result[1], result[2]]; // Testing
-        return result;
+        // TODO remove when we don't want to make as many calls
+        // Testing to only retrieve 3 latest commits
+        return [result[0], result[1], result[2]];
+        // return result;
     } catch (e) {
         console.error("HttpError", e);
     }
@@ -83,6 +87,7 @@ async function getCommit(owner, repo, sha) {
 
 // Get all single commits asynchronously
 function getAllSingleCommits(owner, repo, commitShas) {
+    console.log("Fetching each commit from Github")
     let promises = [];
     commitShas.forEach(c => {
         let promise = getCommit(owner, repo, c);
@@ -103,18 +108,7 @@ async function getCommitComments(owner, repo, commit_sha) {
 }
 
 // Get a the blob of a file. Need to process decode blob from Base64
-async function getBlob(owner, repo, fileName, file_sha) {
-    /*
-    console.log("hey")
-    console.log(file_sha)
-    let result;
-    try {
-        result = await octokit.gitdata.getBlob({owner, repo, file_sha});
-        console.log(result);
-    } catch (e) {
-        console.error("HttpError", e);
-    }
-    */
+function getBlob(owner, repo, fileName, file_sha) {
     return new Promise((resolve, reject) => {
         octokit.gitdata.getBlob({owner, repo, file_sha}).then(result => {
             resolve({
@@ -128,7 +122,6 @@ async function getBlob(owner, repo, fileName, file_sha) {
 /*
     Get blob/file data.
     fileData: result of dp.processContent
-    TODO: Then save it to a file to be analyzed
 */
 function getAllBlobs(owner, repo, fileData)  {
     let promises = [];
@@ -143,7 +136,11 @@ function getAllBlobs(owner, repo, fileData)  {
     return Promise.all(promises);
 }
 
-// Copied from v15.17.0 README
+/*
+Copied from v15.17.0 octokit README
+Listing out resources are returned 30 at a time by default.
+This function fetches all the resources
+*/
 async function paginate (method) {
     let response = await method({ per_page: 100 });
     let { data } = response;

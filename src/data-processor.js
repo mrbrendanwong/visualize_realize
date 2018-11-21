@@ -1,3 +1,6 @@
+const fs = require('fs');
+const config = require('../config');
+
 function processContributors(raw) {
     /*
     Iterate through array. Save all contributor names to a list
@@ -116,7 +119,7 @@ function processCommitComments() {
 
 function processBlob(raw) {
     /*
-    Returns a buffer with decoded blob (file contents) to be used with quality checker later
+    Returns a buffer with decoded blob (file contents)
 
     Relevant data:
         raw.data.content
@@ -124,8 +127,6 @@ function processBlob(raw) {
     let encoded = raw.data.content;
     let result = Buffer.from(encoded, 'base64');
 
-    // TODO save result instead of saving it to data struct
-    // /tmpFile/commitIndex/*.java
     return result;
 }
 
@@ -133,6 +134,9 @@ function processBlob(raw) {
 Create a list of chronologically ordered commit shas
 */
 function prepareCommits(commits) {
+    /*
+    Commits are in retrieved in reverse chronological order
+    */
     let shas = commits.map(commit => commit.sha);
     let result = shas.reverse();
     return result;
