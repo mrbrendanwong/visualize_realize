@@ -1,19 +1,22 @@
 const { spawn } = require('child_process');
-const fs = require('fs');
+const Papa = require('papaparse');
 
 module.exports = {checkCode};
 
-function checkCode() {
-    let resultStream = fs.createWriteStream('pmd_results.csv');
+const papaparseConfig = {
+    header: true,
+    skipEmptyLines: true
+};
+let problemsFound = [];
 
+function checkCode() {
     const pmd = spawn('resources/pmd/bin/run.sh',
         ['pmd', '-d', '../beta_engine/src', '-R', 'resources/rulesets/quickstart.xml',
             '-f', 'csv', '-failOnViolation', 'false']);
 
-    pmd.stdout.on('data', (data) => {
-        resultStream.write(data);
-        console.log(`stdout: ${data}`);
-
+    let csvStream = pmd.stdout.pipe(Papa.parse(Papa.NODE_STREAM_INPUT, papaparseConfig));
+    csvStream.on('data', (problem) => {
+        problemsFound.push(problem);
     });
 
     pmd.stderr.on('data', (data) => {
@@ -22,5 +25,6 @@ function checkCode() {
 
     pmd.on('close', (code) => {
         console.log(`pmd child process exited with code ${code}`);
+        console.log(problemsFound);
     });
 }
