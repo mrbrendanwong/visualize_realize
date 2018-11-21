@@ -49,6 +49,22 @@ function processBranches(raw) {
     */
 }
 
+/*
+Returns a list of:
+    {
+        commitSha: "commitSha",
+        login: "user",
+        files: [
+            {
+                fileName: "*.java",
+                sha: "fileSha"
+                additions: 1,
+                deletions: 2,
+                total: additions - deletions
+            }
+        ]
+    }
+*/
 function processCommits(raw) {
     /*
     Assuming we're only looking at master commits
@@ -57,14 +73,39 @@ function processCommits(raw) {
     Commits may require sorting based on data
 
     Relevant data:
-        raw.data[<index>].sha
+        commits[<index>].sha
 
+        // When committed using website, user is web-flow, so use author property instead
         currCommit.data.committer.login
         currCommit.files[<index>].sha
         currCommit.files[<index>].filename
         currCommit.files[<index>].additions
         currCommit.files[<index>].deletions
     */
+    let result = raw.map(r => {
+        let c = r.data;
+        let commitObj = {
+            commitSha: c.sha,
+            login: c.author.login,
+            files: [],
+        };
+        c.files.forEach(f => {
+            if (f.filename.endsWith(".java")) {
+                let additions = f.additions;
+                let deletions = f.deletions;
+                let fileObj = {
+                    fileName: f.filename.split("/").pop(),
+                    sha: f.sha,
+                    additions: additions,
+                    deletions: deletions,
+                    total: additions - deletions,
+                };
+                commitObj.files.push(fileObj);
+            }
+        });
+        return commitObj;
+    });
+    return result;
 }
 
 function processCommitComments() {
@@ -76,11 +117,26 @@ function processCommitComments() {
 function processBlob(raw) {
     /*
     Returns a buffer with decoded blob (file contents) to be used with quality checker later
+
+    Relevant data:
+        raw.data.content
     */
     let encoded = raw.data.content;
     let result = Buffer.from(encoded, 'base64');
+
+    // TODO save result instead of saving it to data struct
+    // /tmpFile/commitIndex/*.java
+    return result;
+}
+
+/*
+Create a list of chronologically ordered commit shas
+*/
+function prepareCommits(commits) {
+    let shas = commits.map(commit => commit.sha);
+    let result = shas.reverse();
     return result;
 }
 
 module.exports = {processContributors, processContent, processBranches, processCommits,
-    processCommitComments, processBlob};
+    processCommitComments, processBlob, prepareCommits};

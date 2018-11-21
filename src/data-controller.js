@@ -37,10 +37,10 @@ async function getContent(owner, repo, path) {
 }
 
 // Get all contents of a GitHub repository
-async function getAllContent(owner, repo) {
+async function getAllContent(owner, repo, tree_sha) {
     let result;
     try {
-        result = await octokit.gitdata.getTree({owner: owner, repo: repo, tree_sha: "104a670906b9c72a2e6720ef7f6d7f0679bfcb9a", recursive: 1});
+        result = await octokit.gitdata.getTree({owner: owner, repo: repo, tree_sha: tree_sha, recursive: 1});
         //console.log(result);
         //console.log(result.data)
 
@@ -66,22 +66,29 @@ async function getBranchCommits(owner, repo, branch) {
     if (branch === "") branch = "master";
     let result;
     try {
-        result = await octokit.repos.getCommits({owner: owner, repo: repo, sha: branch});
-        console.log(result);
+        // result = await octokit.repos.getCommits({owner: owner, repo: repo, sha: branch});
+        result = await paginate(() =>
+            octokit.repos.getCommits({owner: owner, repo: repo, sha: branch}));
+        // return [result[0], result[1], result[2]]; // Testing
+        return result;
     } catch (e) {
         console.error("HttpError", e);
     }
 }
 
 // Get a single commit
-async function getCommit(owner, repo, commit_sha) {
-    let result;
-    try {
-        result = await octokit.repos.getCommit({owner: owner, repo: repo, sha: commit_sha});
-        console.log(result);
-    } catch (e) {
-        console.error("HttpError", e);
-    }
+async function getCommit(owner, repo, sha) {
+    return octokit.repos.getCommit({owner: owner, repo: repo, sha: sha});
+}
+
+// Get all single commits asynchronously
+function getAllSingleCommits(owner, repo, commitShas) {
+    let promises = [];
+    commitShas.forEach(c => {
+        let promise = getCommit(owner, repo, c);
+        promises.push(promise);
+    });
+    return Promise.all(promises);
 }
 
 // Get the commit comments of a commit
@@ -108,23 +115,44 @@ async function getBlob(owner, repo, fileName, file_sha) {
         console.error("HttpError", e);
     }
     */
-   return new Promise((resolve, reject) => {
-    octokit.gitdata.getBlob({owner, repo, file_sha})
-        .then(result => {
+    return new Promise((resolve, reject) => {
+        octokit.gitdata.getBlob({owner, repo, file_sha}).then(result => {
             resolve({
                 fileName: fileName,
                 raw: result,
-            })
+            });
         });
    });
-    /*
-   console.log("hey")
-   console.log(file_sha)
-
-   let test = await octokit.gitdata.getBlob({owner: owner, repo: repo, file_sha: file_sha});
-   console.log(test)
-   */
 }
 
+/*
+    Get blob/file data.
+    fileData: result of dp.processContent
+    TODO: Then save it to a file to be analyzed
+*/
+function getAllBlobs(owner, repo, fileData)  {
+    let promises = [];
+    for (var file in fileData) {
+        // TODO remove
+        // Limit API calls for now
+        if (file === 'Client.java') {
+            let promise = getBlob(owner, repo, file, fileData[file].sha)
+            promises.push(promise)
+        }
+    }
+    return Promise.all(promises);
+}
+
+// Copied from v15.17.0 README
+async function paginate (method) {
+    let response = await method({ per_page: 100 });
+    let { data } = response;
+    while (octokit.hasNextPage(response)) {
+      response = await octokit.getNextPage(response);
+      data = data.concat(response.data);
+    }
+    return data;
+  }
+
 module.exports = {getContributors, getContent, getBranches, getBranchCommits,
-    getCommit, getCommitComments, getBlob, getAllContent};
+    getCommit, getAllSingleCommits, getCommitComments, getBlob, getAllBlobs, getAllContent};
