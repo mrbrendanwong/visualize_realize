@@ -13,20 +13,13 @@
 
     <!-- ******  RESOURCES ****** -->
     <!-- BOIDS -->
+    <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="vec2.js"></script>
     <script type="text/javascript" src="boids.js"></script>
     <!-- INIT -->
     <script type="text/javascript">
       var canvasDiv = document.getElementById('boids-canvas');
-      var options = {
-        background: '#ecf0f1',
-        density: 'low',
-        speed: 'slow',
-        interactive: true,
-        mixedSizes: true,
-        boidColours: ["#34495e", "#e74c3c", '#2ecc71', '#9b59b6', '#f1c40f', '#1abc9c']
-      };
-      var boidsCanvas = new BoidsCanvas(canvasDiv, options);
+      var boidsCanvas = new BoidsCanvas(canvasDiv);
     </script>
   </body>
 </html>

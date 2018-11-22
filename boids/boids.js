@@ -3,7 +3,7 @@
 var minsize = 25;
 var maxsize = 100;
 
-var Boid = function(parent, position, velocity, size, colour) {
+var Boid = function(parent, position, velocity, size) {
   // Initialise the boid parameters
   this.position = new Vector(position.x, position.y);
   this.velocity = new Vector(velocity.x, velocity.y);
@@ -157,8 +157,12 @@ Boid.prototype.applyForce = function(force) {
   this.acceleration = this.acceleration.add(force.div(new Vector(this.size, this.size)));
 };
 
-// BOIDS CANVAS CLASS
-var BoidsCanvas = function(canvas, options) {
+
+//##############################################################################
+
+
+// BOIDS CANVAS CLASS (FLOCK)
+var BoidsCanvas = function(canvas) {
   this.canvasDiv = canvas;
   this.canvasDiv.size = {
     'width': this.canvasDiv.offsetWidth,
@@ -166,14 +170,9 @@ var BoidsCanvas = function(canvas, options) {
   };
 
   // Set customisable boids parameters
-  options = options !== undefined ? options : {};
+  // TODO remove
   this.options = {
-    background: (options.background !== undefined) ? options.background : '#1a252f',
-    density: this.setDensity(options.density),
-    speed: this.setSpeed(options.speed),
-    interactive: (options.interactive !== undefined) ? options.interactive : true,
-    mixedSizes: (options.mixedSizes !== undefined) ? options.mixedSizes : true,
-    boidColours: (options.boidColours !== undefined && options.boidColours.length !== 0) ? options.boidColours : ["#ff3333"]
+    speed: 3,
   };
 
   // Internal boids parameters
@@ -228,10 +227,14 @@ BoidsCanvas.prototype.init = function() {
     this.canvas.width = this.canvasDiv.size.width = this.canvasDiv.offsetWidth;
     this.canvas.height = this.canvasDiv.size.height = this.canvasDiv.offsetHeight;
 
+  // TODO don't reinitialize boids on resize, scale instead
     this.initialiseBoids();
   }.bind(this));
 
   this.initialiseBoids();
+
+  // Add key listener to switch commits
+  document.addEventListener('keydown', this.changeCommit.bind(this));
 
   // Update canvas
   requestAnimationFrame(this.update.bind(this));
@@ -239,19 +242,71 @@ BoidsCanvas.prototype.init = function() {
 
 // Initialise boids according to options
 BoidsCanvas.prototype.initialiseBoids = function() {
-  this.boids = [];
-  for(var i = 0; i < this.canvas.width * this.canvas.height / this.options.density; i++) {
+  this.currentCommit = 0;
+  this.boids = {};
+  // TODO make boids based on files
+  for(var i = 0; i < data.commits[0].files.length; i++) {
     var position = new Vector(Math.floor(Math.random()*(this.canvas.width+1)),
                               Math.floor(Math.random()*(this.canvas.height+1)));
-    var max_velocity = 5;
-    var min_velocity = -5;
-    var velocity = new Vector(Math.floor(Math.random()*(max_velocity-min_velocity+1)+min_velocity),
-                              Math.floor(Math.random()*(max_velocity-min_velocity+1)+min_velocity));
+    var max = 1;
+    var min = -1;
+    var velocity = new Vector(Math.random() * (max - min) + min,
+                              Math.random() * (max - min) + min)
+                    .normalise()
+                    .mul(new Vector(1.5, 1.5));
     var size = Math.floor(Math.random() * (maxsize - minsize)) + minsize;
-    var colourIdx = Math.floor(Math.random()*(this.options.boidColours.length-1+1));
-    this.boids.push(new Boid(this, position, velocity, size, this.options.boidColours[colourIdx]));
+
+    this.boids[data.commits[0].files[i].name] = new Boid(this, position, velocity, size);
+    //this.boids.push(new Boid(this, position, velocity, size));
   }
 };
+
+BoidsCanvas.prototype.changeCommit = function(event) {
+  // Change the current commit
+  if (event.keyCode == 37) {
+    if (this.currentCommit == 0) {
+      return;
+    }
+    this.currentCommit--;
+  } else if (event.keyCode == 39) {
+    if (this.currentCommit == data.commits.length - 1) {
+      return;
+    }
+    this.currentCommit++;
+  } else { 
+    return; 
+  }
+
+  let commit = data.commits[this.currentCommit];
+  
+  // Delete boids if file was deleted
+  let fileList = commit.files.map(file => file.name);
+  console.log(fileList);
+  for (const [file, boid] of Object.entries(this.boids)) {
+    if (!(fileList.includes(file))) {
+      delete this.boids[file];
+      console.log("Deleted " + file);
+    }
+  }
+
+  // Update boids, add a boid if it doesn't exist
+  commit.files.forEach(function (file) {
+    if (!(file.name in this.boids)) {
+      var position = new Vector(Math.floor(Math.random()*(this.canvas.width+1)),
+                              Math.floor(Math.random()*(this.canvas.height+1)));
+      var max = 1;
+      var min = -1;
+      var velocity = new Vector(Math.random() * (max - min) + min,
+                                Math.random() * (max - min) + min)
+                      .normalise()
+                      .mul(new Vector(1.5, 1.5));
+      var size = Math.floor(Math.random() * (maxsize - minsize)) + minsize;
+      this.boids[file.name] = new Boid(this, position, velocity, size);
+      console.log("Added " + file.name);
+    }
+  }.bind(this));
+
+}
 
 BoidsCanvas.prototype.update = function() {
   // Clear canvas
@@ -259,35 +314,13 @@ BoidsCanvas.prototype.update = function() {
   this.ctx.globalAlpha = 1;
 
   // Update and draw boids
-  for (var i = 0; i < this.boids.length; i++) {
-    this.boids[i].update();
-    this.boids[i].draw();
+  for (const [file, boid] of Object.entries(this.boids)) {
+    boid.update();
+    boid.draw();
   }
 
   // Request next frame
   requestAnimationFrame(this.update.bind(this));
-};
-
-// Helper method to set density multiplier
-BoidsCanvas.prototype.setSpeed = function (speed) {
-  if (speed === 'fast') {
-    return 3;
-  }
-  else if (speed === 'slow') {
-    return 1;
-  }
-  return 2;
-};
-
-// Helper method to set density multiplier
-BoidsCanvas.prototype.setDensity = function (density) {
-  if (density === 'high') {
-    return 5000;
-  }
-  else if (density === 'low') {
-    return 20000;
-  }
-  return 10000;
 };
 
 // Helper method to set multiple styles
