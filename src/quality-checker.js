@@ -11,7 +11,6 @@ const papaparseConfig = {
     header: true,
     skipEmptyLines: true
 };
-let problemsFound = [];
 
 /**
  * Uses PMD to check the Java code in the sourceDirectory, finds all the problems from the rule set
@@ -23,6 +22,7 @@ let problemsFound = [];
  */
 function checkCode(sourceDirectory, outputFileLocation) {
     return new Promise((resolve, reject) => {
+        let problemsFound = [];
         const pmd = spawn('resources/pmd/bin/run.sh',
             ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
                 '-f', 'csv', '-failOnViolation', 'false']);
@@ -77,7 +77,6 @@ function processCouplingMetric(sourceDirectory) {
                             const calledFileRegex = new RegExp('(?<!")\\b' + calledFileClassName + '\\b(?!")', 'gm');
                             const regexMatches = line.match(calledFileRegex);
                             if (regexMatches && regexMatches.length > 0) {
-                                console.log(regexMatches);
                                 const currMetric = metrics[currFileClassName][calledFileClassName];
                                 metrics[currFileClassName][calledFileClassName] = currMetric != undefined ? currMetric + regexMatches.length : regexMatches.length;
                             }
