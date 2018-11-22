@@ -6,6 +6,7 @@ const Papa = require('papaparse');
 
 module.exports = {checkCode, processCouplingMetric};
 
+const commentRegex = new RegExp('^\\s*\/\/', 'm');
 const papaparseConfig = {
     header: true,
     skipEmptyLines: true
@@ -69,16 +70,20 @@ function processCouplingMetric(sourceDirectory) {
                 crlfDelay: Infinity
             });
             rl.on('line', (line) => {
-                fileNames.forEach((calledFile) => {
-                    if (calledFile !== currFile) {
-                        const calledFileClassName = path.parse(calledFile).base.split('.')[0];
-                        // TODO: FIX HOW COUPLING METRIC IS COMPUTED
-                        if (line.includes(calledFileClassName)) {
-                            const currMetric = metrics[currFileClassName][calledFileClassName];
-                            metrics[currFileClassName][calledFileClassName] = currMetric != undefined ? currMetric + 1 : 0;
+                if (!commentRegex.test(line)) {
+                    fileNames.forEach((calledFile) => {
+                        if (calledFile !== currFile) {
+                            const calledFileClassName = path.parse(calledFile).base.split('.')[0];
+                            const calledFileRegex = new RegExp('(?<!")\\b' + calledFileClassName + '\\b(?!")', 'gm');
+                            const regexMatches = line.match(calledFileRegex);
+                            if (regexMatches && regexMatches.length > 0) {
+                                console.log(regexMatches);
+                                const currMetric = metrics[currFileClassName][calledFileClassName];
+                                metrics[currFileClassName][calledFileClassName] = currMetric != undefined ? currMetric + regexMatches.length : regexMatches.length;
+                            }
                         }
-                    }
-                })
+                    })
+                }
             });
             rl.on('close', () => {
                 console.log(`Done reading file ${currFile}`);
