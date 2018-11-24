@@ -8,7 +8,7 @@ const dp = require('./data-processor');
 function processRequest(owner, repo) {
     return new Promise((resolve, reject) => {
         // Delete all subdirs (commit dirs)
-        rimraf(config.tmpDir + '/*', function () {
+        rimraf(config.tmpDir + '*', function () {
             console.log("Starting to get data from github")
             fetchAndProcessGithubData(owner, repo).then(commits => {
                 // TODO add analysis data to commits variable
@@ -80,7 +80,7 @@ function saveCommitContent(owner, repo, tree_sha, commitIndex) {
 
 function createCommitDir(commitIndex) {
     return new Promise((resolve, reject) => {
-        let path = `${config.tmpDir}/${commitIndex}`;
+        let path = `${config.tmpDir}${commitIndex}`;
         fs.mkdir(path, function (err) {
             if (err && err.code !== "EEXIST") {
                 console.error(`Failed to create commit #${commitIndex} directory`, err);
@@ -97,7 +97,7 @@ Saving file to disk under /tmpDir/commit-index/fileName
 function saveBlobToDisk(commitIndex, fileName, content) {
     return new Promise((resolve, reject) => {
         createCommitDir(commitIndex).then(() => {
-            let path = `${config.tmpDir}/${commitIndex}/${fileName}`;
+            let path = `${config.tmpDir}${commitIndex}/${fileName}`;
             fs.writeFile(path, content, function(err) {
                 if (err) {
                     console.error(`Error writing file: ${path}`, err);

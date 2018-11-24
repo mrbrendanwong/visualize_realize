@@ -1,6 +1,8 @@
 const nodegit = require("nodegit"),
     rimraf = require('rimraf'),
-    path = require("path");
+    path = require("path"),
+    config = require('../config')
+    ;
 
 /*
 Clone a git repo for local processing
@@ -10,7 +12,7 @@ Handle resolve and rejection
  */
 async function getRepo(url) {
     let dirName = url.split("/").pop();
-    await nodegit.Clone(url, "./tmpFiles/" + dirName);
+    await nodegit.Clone(url, config.tmpDir + dirName);
     console.log("data-controller-proto:: Cloning repos complete");
 }
 
@@ -21,7 +23,7 @@ Adapted from https://github.com/nodegit/nodegit/blob/master/examples/walk-histor
 function getAllCommits(dirName) {
     console.log("data-controller-proto.getAllCommits:: Retrieving commit SHAs")
     return new Promise ((resolve) => {
-        nodegit.Repository.open(path.resolve(__dirname, "../tmpFiles/" + dirName))
+        nodegit.Repository.open(path.resolve(config.tmpDir + dirName))
             .then(repo => repo.getMasterCommit())
             .then(firstCommit => {
                 let history = firstCommit.history(nodegit.Revwalk.SORT.TIME);

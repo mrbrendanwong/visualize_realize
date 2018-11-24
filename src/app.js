@@ -52,8 +52,10 @@ handler.processRequest(owner, repo).then(() => {
 const dcp = require("./data-controller-proto");
 const dpp = require("./data-processor-proto");
 
-//dcp.getRepo("https://github.com/mrbrendanwong/beta_engine");
+// dcp.getRepo("https://github.com/mrbrendanwong/beta_engine");
 dcp.getAllCommits("beta_engine")
     .then(commits => {
-        let processed = dpp.processCommits(commits).then(results => console.log(results[0]))
+        let processed = dpp.processCommits(commits).then(results => {
+            console.log(results[0].files)
+        })
     });
