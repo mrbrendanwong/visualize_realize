@@ -30,6 +30,7 @@ function processRequest(url) {
                 // TODO add analysis data to commits variable                
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
                 resolve(commitObjects);
+                // TODO commitObjects to json file or something
             }).catch(e => {
                 reject(e)
             });

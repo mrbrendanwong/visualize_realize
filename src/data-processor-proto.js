@@ -1,3 +1,4 @@
+const _ = require('lodash');
 /*
 Returns a list of:
     {
@@ -6,64 +7,13 @@ Returns a list of:
         files: [
             {
                 fileName: "*.java",
-                sha: "fileSha"
-                additions: 1,
-                deletions: 2,
-                total: additions - deletions
+                fileSha: "fileSha",
+                diff: 2,
             }
         ]
     }
 */
 function processCommits(commits) {
-        let result = commits.map(commit => {
-            return new Promise ((resolve, reject) => commit.getTree().then(tree => {
-                let commitObj = {
-                    sha: commit.sha(),
-                    commiter: commit.author().name(),
-                    files: []
-                };
-
-                /*
-                let diffData = commit.getDiff().then(diffs => {
-                    return diffs.map(diff => {
-                        return new Promise (resolve => {
-                            let patchData = diff.patches().then(patches => {
-                                return patches.map(patch => {
-                                    return {
-                                        total_delta: patch.lineStats().total_additions - patch.lineStats().total_deletions,
-                                        fileName: patch.newFile().path().split("/").pop().toLowerCase()
-                                    }
-                                })
-                            })
-                        })
-                    });
-
-                    Promise.all(patches).then()
-                });
-                */
-
-                let emitter = tree.walk();
-
-                emitter.on('entry', entry => {
-                    if (entry.isBlob() && entry.name().endsWith(".java")) {
-                        let fileObj = {
-                            fileName: entry.name().toLowerCase(),
-                            sha: entry.sha()
-                        };
-                        commitObj.files.push(fileObj);
-                    }
-                });
-
-                emitter.on('end', () => resolve(commitObj));
-
-                emitter.start();
-            }));
-        });
-
-        return Promise.all(result);
-}
-
-function processCommitsProto(commits) {
     let commitPromises = commits.map(commit => {
         return commit.getTree().then(tree => {
             let commitObj = {
@@ -80,25 +30,42 @@ function processCommitsProto(commits) {
                                 let result = patches.map(patch => {
                                     return {
                                         total_delta: patch.lineStats().total_additions - patch.lineStats().total_deletions,
-                                        fileName: patch.newFile().path().split("/").pop().toLowerCase()
+                                        fileName: patch.newFile().path().split("/").pop(),
                                     }
                                 });
                                 resolve1(result);
                             });
                         }))
                     });
-                    return Promise.all(diffPromises)
+                    return Promise.all(diffPromises);
                 }).then(diffInfo => {
                     let emitter = tree.walk();
 
+                    let fileDeltas = _.flattenDeep(diffInfo);
+                    let mergedDeltas = [];
+                    fileDeltas.forEach(delta => {
+                        let fileNameIndex = mergedDeltas.findIndex(md => md.fileName === delta.fileName);
+                        if (fileNameIndex === -1) {
+                            mergedDeltas.push({
+                                fileName: delta.fileName,
+                                total_delta: delta.total_delta,
+                            });
+                        } else {
+                            mergedDeltas[fileNameIndex].total_delta += delta.total_delta;
+                        }
+                    });
+
                     emitter.on('entry', entry => {
                         if (entry.isBlob() && entry.name().endsWith(".java")) {
-                            let fileObj = {
-                                fileName: entry.name().toLowerCase(),
-                                sha: entry.sha(),
-                                diff: diffInfo
-                            };
-                            commitObj.files.push(fileObj);
+                            let fileDiff = mergedDeltas.find(f => f.fileName === entry.name());
+                            if (fileDiff !== undefined) {
+                                let fileObj = {
+                                    fileName: entry.name(),
+                                    fileSha: entry.sha(),
+                                    diff: fileDiff.total_delta,
+                                };
+                                commitObj.files.push(fileObj);
+                            }
                         }
                     });
 
@@ -109,8 +76,7 @@ function processCommitsProto(commits) {
             }))
         })
     });
-
     return Promise.all(commitPromises);
 }
 
-module.exports = {processCommits, processCommitsProto};
+module.exports = {processCommits};

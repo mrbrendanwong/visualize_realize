@@ -38,7 +38,7 @@ function getAllCommits(dirName) {
                 // Because commits on master is not a chain and each commit is not guaranteed to
                 // be the diff of the previous commit in the array
 
-                let history = firstCommit.history(nodegit.Revwalk.SORT.TIME);
+                let history = firstCommit.history(nodegit.Revwalk.SORT.TIME, nodegit.Revwalk.SORT.REVERSE);
                 history.on("end", commits => resolve(commits));
                 history.start();
             });
@@ -54,7 +54,7 @@ function getBlobs(files, repoName) {
         nodegit.Repository.open(path.resolve(config.tmpDir + config.repoDir + repoName))
             .then(repo => {
                 files.forEach(f => {
-                    let promise = repo.getBlob(f.sha);
+                    let promise = repo.getBlob(f.fileSha);
                     promises.push(promise);
                 });
                 Promise.all(promises).then(result => {
