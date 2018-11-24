@@ -46,12 +46,6 @@ function processContent(raw) {
     return fileData;
 }
 
-function processBranches(raw) {
-    /*
-    Currently unsure of purpose
-    */
-}
-
 /*
 Returns a list of:
     {
@@ -69,22 +63,6 @@ Returns a list of:
     }
 */
 function processCommits(raw) {
-    /*
-    Assuming we're only looking at master commits
-    Use sha retrieved from "raw" to retrieve a single commit with data-controller.getCommit in to "currCommit"
-    Go through currCommit data. Store changes to file under {<file name>: {..., commits: [{<sha>: {...}}]}}
-    Commits may require sorting based on data
-
-    Relevant data:
-        raw[<index>].data.sha
-
-        // When committed using website, user is web-flow, so use author property instead
-        currCommit.data.committer.login
-        currCommit.files[<index>].sha
-        currCommit.files[<index>].filename
-        currCommit.files[<index>].additions
-        currCommit.files[<index>].deletions
-    */
     let result = raw.map(r => {
         let c = r.data;
         let commitObj = {
@@ -109,12 +87,6 @@ function processCommits(raw) {
         return commitObj;
     });
     return result;
-}
-
-function processCommitComments() {
-    /*
-    Currently unsure of purpose
-    */
 }
 
 function processBlob(raw) {
@@ -142,5 +114,4 @@ function prepareCommits(commits) {
     return result;
 }
 
-module.exports = {processContributors, processContent, processBranches, processCommits,
-    processCommitComments, processBlob, prepareCommits};
+module.exports = {processContributors, processContent, processCommits, processBlob, prepareCommits};

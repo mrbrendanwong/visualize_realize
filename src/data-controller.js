@@ -1,5 +1,6 @@
 const octokit = require('@octokit/rest')({debug: true});
 
+
 // Too many API calls, so got a personal access token from git
 // May consider a downloading different library like nodegit instead of making
 // a lot of requests to github per commit for the state of the files
@@ -96,17 +97,6 @@ function getAllSingleCommits(owner, repo, commitShas) {
     return Promise.all(promises);
 }
 
-// Get the commit comments of a commit
-async function getCommitComments(owner, repo, commit_sha) {
-    let result;
-    try {
-        result = await octokit.repos.getCommitComments({owner: owner, repo: repo, ref: commit_sha});
-        console.log(result);
-    } catch (e) {
-        console.error("HttpError", e);
-    }
-}
-
 // Get the blob of a file. Need to process decode blob from Base64
 function getBlob(owner, repo, fileName, file_sha) {
     return new Promise((resolve, reject) => {
@@ -152,4 +142,4 @@ async function paginate (method) {
   }
 
 module.exports = {getContributors, getContent, getBranches, getBranchCommits,
-    getCommit, getAllSingleCommits, getCommitComments, getBlob, getAllBlobs, getAllContent};
+    getCommit, getAllSingleCommits, getBlob, getAllBlobs, getAllContent};
