@@ -10,10 +10,15 @@ Check if dir already exists; if so, delete
 Look into giving dirs a custom name
 Handle resolve and rejection
  */
-async function getRepo(url) {
+function getRepo(url) {
+    console.log("data-controller-proto.getAllCommits:: Cloning repo:", url, ".\nPlease wait...");
     let dirName = url.split("/").pop();
-    await nodegit.Clone(url, config.tmpDir + dirName);
-    console.log("data-controller-proto:: Cloning repos complete");
+    return new Promise(resolve => {
+        nodegit.Clone(url, config.tmpDir + config.repoDir + dirName).then(() => {
+            console.log("data-controller-proto:: Cloning repos complete");
+            resolve();
+        })
+    })
 }
 
 /*
@@ -23,7 +28,7 @@ Adapted from https://github.com/nodegit/nodegit/blob/master/examples/walk-histor
 function getAllCommits(dirName) {
     console.log("data-controller-proto.getAllCommits:: Retrieving commit SHAs")
     return new Promise ((resolve) => {
-        nodegit.Repository.open(path.resolve(config.tmpDir + dirName))
+        nodegit.Repository.open(path.resolve(config.tmpDir + config.repoDir + dirName))
             .then(repo => repo.getMasterCommit())
             .then(firstCommit => {
                 let history = firstCommit.history(nodegit.Revwalk.SORT.TIME);
@@ -32,16 +37,27 @@ function getAllCommits(dirName) {
 
                 history.start();
             });
-    })
+    });
 }
 
-async function getAllBlobs() {
-
+/*
+Get all the blobs for current commit
+*/
+function getBlobs(files, repoName) {
+    return new Promise(resolve => {
+        let promises = [];
+        nodegit.Repository.open(path.resolve(config.tmpDir + config.repoDir + repoName))
+            .then(repo => {
+                files.forEach(f => {
+                    let promise = repo.getBlob(f.sha);
+                    promises.push(promise);
+                });
+                Promise.all(promises).then(result => {
+                    resolve(result);
+                });
+            })
+    });
 }
 
-async function getBlob() {
 
-}
-
-
-module.exports = {getRepo, getAllCommits};
+module.exports = {getRepo, getAllCommits, getBlobs};

@@ -1,3 +1,19 @@
+/*
+Returns a list of:
+    {
+        commitSha: "commitSha",
+        login: "user",
+        files: [
+            {
+                fileName: "*.java",
+                sha: "fileSha"
+                additions: 1,
+                deletions: 2,
+                total: additions - deletions
+            }
+        ]
+    }
+*/
 function processCommits(commits) {
         let result = commits.map(commit => {
 
@@ -7,6 +23,10 @@ function processCommits(commits) {
                     commiter: commit.author().name(),
                     files: []
                 };
+                // TODO we have to get the latest commit on master, then find its parents
+                // And walk up the commit history
+                // Because commits on master is not a chain and each commit is not guaranteed to
+                // be the diff of the previous commit in the array
 
                 /*
                 let diffData = commit.getDiff().then(diffs => {
@@ -47,5 +67,6 @@ function processCommits(commits) {
 
         return Promise.all(result);
 }
+
 
 module.exports = {processCommits};

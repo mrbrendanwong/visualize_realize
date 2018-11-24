@@ -3,6 +3,7 @@ const fs = require('fs');
 
 const config = require('../config');
 const handler = require('./data-handler');
+const handlerProto = require('./data-handler-proto');
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -23,21 +24,26 @@ server.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
 
-function createTmpDir() {
-    let dir = config.tmpDir
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
+function createDir(dirName) {
+    if (!fs.existsSync(dirName)){
+        fs.mkdirSync(dirName);
     }
 }
 
-createTmpDir();
+function initDirs() {
+    createDir(config.tmpDir);
+    createDir(config.tmpDir + config.commitDir);
+    createDir(config.tmpDir + config.repoDir);    
+}
+
+initDirs();
 
 // Testing
 // const dc = require('./data-controller');
 // const dp = require('./data-processor');
 
-var owner = "mrbrendanwong";
-var repo = "beta_engine";
+// var owner = "mrbrendanwong";
+// var repo = "beta_engine";
 //handler.saveCommitContent(owner, repo);
 // handler.fetchAndProcessGithubData(owner, repo);
 /*
@@ -52,10 +58,20 @@ handler.processRequest(owner, repo).then(() => {
 const dcp = require("./data-controller-proto");
 const dpp = require("./data-processor-proto");
 
-// dcp.getRepo("https://github.com/mrbrendanwong/beta_engine");
-dcp.getAllCommits("beta_engine")
-    .then(commits => {
-        let processed = dpp.processCommits(commits).then(results => {
-            console.log(results[0].files)
-        })
-    });
+/*
+dcp.getRepo("https://github.com/mrbrendanwong/beta_engine").then(() => {
+    dcp.getAllCommits("beta_engine")
+        .then(commits => {
+            let processed = dpp.processCommits(commits).then(results => {
+                console.log(results[0].files)
+            })
+        });
+})
+*/
+
+handlerProto.processRequest("https://github.com/mrbrendanwong/beta_engine").then(results => {
+    console.log(results[0])
+    console.log("(✿╹◡╹) VERSACE");
+}).catch(e => {
+    console.error("Not versace", e);
+});

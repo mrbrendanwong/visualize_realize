@@ -1,3 +1,5 @@
 {
-    "tmpDir": "tmpFiles/"
+    "tmpDir": "tmpFiles/",
+    "commitDir": "commits/",
+    "repoDir": "repos/"
 }
