@@ -16,17 +16,12 @@ Returns a list of:
 */
 function processCommits(commits) {
         let result = commits.map(commit => {
-
             return new Promise ((resolve, reject) => commit.getTree().then(tree => {
                 let commitObj = {
                     sha: commit.sha(),
                     commiter: commit.author().name(),
                     files: []
                 };
-                // TODO we have to get the latest commit on master, then find its parents
-                // And walk up the commit history
-                // Because commits on master is not a chain and each commit is not guaranteed to
-                // be the diff of the previous commit in the array
 
                 /*
                 let diffData = commit.getDiff().then(diffs => {
@@ -68,5 +63,54 @@ function processCommits(commits) {
         return Promise.all(result);
 }
 
+function processCommitsProto(commits) {
+    let commitPromises = commits.map(commit => {
+        return commit.getTree().then(tree => {
+            let commitObj = {
+                sha: commit.sha(),
+                committer: commit.author().name(),
+                files: []
+            };
 
-module.exports = {processCommits};
+            return new Promise((resolve => {
+                commit.getDiff().then(diffs => {
+                    let diffPromises = diffs.map(diff => {
+                        return new Promise((resolve1 => {
+                            diff.patches().then(patches => {
+                                let result = patches.map(patch => {
+                                    return {
+                                        total_delta: patch.lineStats().total_additions - patch.lineStats().total_deletions,
+                                        fileName: patch.newFile().path().split("/").pop().toLowerCase()
+                                    }
+                                });
+                                resolve1(result);
+                            });
+                        }))
+                    });
+                    return Promise.all(diffPromises)
+                }).then(diffInfo => {
+                    let emitter = tree.walk();
+
+                    emitter.on('entry', entry => {
+                        if (entry.isBlob() && entry.name().endsWith(".java")) {
+                            let fileObj = {
+                                fileName: entry.name().toLowerCase(),
+                                sha: entry.sha(),
+                                diff: diffInfo
+                            };
+                            commitObj.files.push(fileObj);
+                        }
+                    });
+
+                    emitter.on('end', () => resolve(commitObj));
+
+                    emitter.start();
+                });
+            }))
+        })
+    });
+
+    return Promise.all(commitPromises);
+}
+
+module.exports = {processCommits, processCommitsProto};

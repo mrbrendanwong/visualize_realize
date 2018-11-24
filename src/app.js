@@ -58,20 +58,20 @@ handler.processRequest(owner, repo).then(() => {
 const dcp = require("./data-controller-proto");
 const dpp = require("./data-processor-proto");
 
-/*
-dcp.getRepo("https://github.com/mrbrendanwong/beta_engine").then(() => {
-    dcp.getAllCommits("beta_engine")
-        .then(commits => {
-            let processed = dpp.processCommits(commits).then(results => {
-                console.log(results[0].files)
-            })
-        });
-})
-*/
 
+dcp.getAllCommits("beta_engine")
+    .then(commits => {
+        let processed = dpp.processCommitsProto(commits).then(results => {
+            console.log(results[0].files[0].diff)
+        })
+    });
+
+
+/*
 handlerProto.processRequest("https://github.com/mrbrendanwong/beta_engine").then(results => {
     console.log(results[0])
     console.log("(✿╹◡╹) VERSACE");
 }).catch(e => {
     console.error("Not versace", e);
 });
+*/
