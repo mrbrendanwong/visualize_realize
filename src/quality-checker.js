@@ -49,52 +49,61 @@ function checkCode(sourceDirectory, outputFileLocation) {
 }
 
 /**
- * Gets the number of times a class in mentioned in another class for all Java files in sourceDirectory
+ * Gets the number of times a class is mentioned in another class for all Java files in sourceDirectory
  * @param {String} sourceDirectory reads code from here
+ * @return {Promise}
  */
-function processCouplingMetric(sourceDirectory) {
-    let promises = [];
-    let metrics = [];
-    let fileNames = [];
-    for (const file of walkSync(sourceDirectory)) {
-        if (file.toLowerCase().endsWith('.java')) {
-            fileNames.push(file);
+async function processCouplingMetric(sourceDirectory) {
+    try {
+        if (!sourceDirectory) {
+            console.log('quality-checker.processCouplingMetric:: sourceDirectory was undefined');
+            return false;
         }
-    }
-    fileNames.forEach((currFile) => {
-        let filePromise = new Promise((resolve) => {
-            const currFileClassName = path.parse(currFile).base.split('.')[0];
-            metrics[currFileClassName] = {};
-            const rl = readline.createInterface({
-                input: fs.createReadStream(currFile),
-                crlfDelay: Infinity
-            });
-            rl.on('line', (line) => {
-                if (!commentRegex.test(line)) {
-                    fileNames.forEach((calledFile) => {
-                        if (calledFile !== currFile) {
-                            const calledFileClassName = path.parse(calledFile).base.split('.')[0];
-                            const calledFileRegex = new RegExp('(?<!")\\b' + calledFileClassName + '\\b(?!")', 'gm');
-                            const regexMatches = line.match(calledFileRegex);
-                            if (regexMatches && regexMatches.length > 0) {
-                                const currMetric = metrics[currFileClassName][calledFileClassName];
-                                metrics[currFileClassName][calledFileClassName] = currMetric != undefined ? currMetric + regexMatches.length : regexMatches.length;
+        let promises = [];
+        let metrics = {};
+        let fileNames = [];
+        for (const file of walkSync(sourceDirectory)) {
+            if (file.toLowerCase().endsWith('.java')) {
+                fileNames.push(file);
+            }
+        }
+        fileNames.forEach((currFile) => {
+            let filePromise = new Promise((resolve) => {
+                const currFileClassName = path.parse(currFile).base.split('.')[0];
+                metrics[currFileClassName] = {};
+                const rl = readline.createInterface({
+                    input: fs.createReadStream(currFile),
+                    crlfDelay: Infinity
+                });
+                rl.on('line', (line) => {
+                    if (!commentRegex.test(line)) {
+                        fileNames.forEach((calledFile) => {
+                            if (calledFile !== currFile) {
+                                const calledFileClassName = path.parse(calledFile).base.split('.')[0];
+                                const calledFileRegex = new RegExp('(?<!")\\b' + calledFileClassName + '\\b(?!")', 'gm');
+                                const regexMatches = line.match(calledFileRegex);
+                                if (regexMatches && regexMatches.length > 0) {
+                                    const currMetric = metrics[currFileClassName][calledFileClassName];
+                                    metrics[currFileClassName][calledFileClassName] = currMetric !== undefined ? currMetric + regexMatches.length : regexMatches.length;
+                                }
                             }
-                        }
-                    })
-                }
+                        })
+                    }
+                });
+                rl.on('close', () => {
+                    // console.log(`Done reading file ${currFile}`);
+                    resolve();
+                })
             });
-            rl.on('close', () => {
-                console.log(`Done reading file ${currFile}`);
-                resolve();
-            })
-        })
-        promises.push(filePromise);
-    });
-    return Promise.all(promises).then(
-        () => metrics,
-        () => false
-    );
+            promises.push(filePromise);
+        });
+        await Promise.all(promises);
+        return metrics;
+    }
+    catch (e) {
+        console.log(e);
+        return false;
+    }
 }
 
 /**
