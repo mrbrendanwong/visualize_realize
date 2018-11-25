@@ -3,7 +3,6 @@ const fs = require('fs');
 const readline = require('readline');
 const path = require('path');
 const Papa = require('papaparse');
-const _ = require('lodash');
 
 const config = require('../config');
 
