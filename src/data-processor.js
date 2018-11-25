@@ -1,5 +1,5 @@
-module.exports = {processContributors, processContent, processBranches, processCommits,
-    processCommitComments, processBlob};
+const fs = require('fs');
+const config = require('../config');
 
 function processContributors(raw) {
     /*
@@ -43,40 +43,75 @@ function processContent(raw) {
 
     console.log("File data:");
     console.log(fileData);
+    return fileData;
 }
 
-function processBranches(raw) {
-    /*
-    Currently unsure of purpose
-    */
-}
-
+/*
+Returns a list of:
+    {
+        commitSha: "commitSha",
+        login: "user",
+        files: [
+            {
+                fileName: "*.java",
+                sha: "fileSha"
+                additions: 1,
+                deletions: 2,
+                total: additions - deletions
+            }
+        ]
+    }
+*/
 function processCommits(raw) {
+    let result = raw.map(r => {
+        let c = r.data;
+        let commitObj = {
+            commitSha: c.sha,
+            login: c.author.login,
+            files: [],
+        };
+        c.files.forEach(f => {
+            if (f.filename.endsWith(".java")) {
+                let additions = f.additions;
+                let deletions = f.deletions;
+                let fileObj = {
+                    fileName: f.filename.split("/").pop(),
+                    sha: f.sha,
+                    additions: additions,
+                    deletions: deletions,
+                    total: additions - deletions,
+                };
+                commitObj.files.push(fileObj);
+            }
+        });
+        return commitObj;
+    });
+    return result;
+}
+
+function processBlob(raw) {
     /*
-    Assuming we're only looking at master commits
-    Use sha retrieved from "raw" to retrieve a single commit with data-controller.getCommit in to "currCommit"
-    Go through currCommit data. Store changes to file under {<file name>: {..., commits: [{<sha>: {...}}]}}
-    Commits may require sorting based on data
+    Returns a buffer with decoded blob (file contents)
 
     Relevant data:
-        raw.data[<index>].sha
-
-        currCommit.data.committer.login
-        currCommit.files[<index>].sha
-        currCommit.files[<index>].filename
-        currCommit.files[<index>].additions
-        currCommit.files[<index>].deletions
+        raw.data.content
     */
+    let encoded = raw.data.content;
+    let result = Buffer.from(encoded, 'base64');
+
+    return result;
 }
 
-function processCommitComments() {
+/*
+Create a list of chronologically ordered commit shas
+*/
+function prepareCommits(commits) {
     /*
-    Currently unsure of purpose
+    Commits are in retrieved in reverse chronological order
     */
+    let shas = commits.map(commit => commit.sha);
+    let result = shas.reverse();
+    return result;
 }
 
-function processBlob() {
-    /*
-    Currently unsure of purpose
-    */
-}
+module.exports = {processContributors, processContent, processCommits, processBlob, prepareCommits};

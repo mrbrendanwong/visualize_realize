@@ -2,3 +2,6 @@
 *.iml
 package-lock.json
 /node_modules
+api_key.json
+*tmpFiles*
+.vscode

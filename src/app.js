@@ -1,4 +1,9 @@
 const http = require('http');
+const fs = require('fs');
+
+const config = require('../config');
+const handler = require('./data-handler');
+const handlerProto = require('./data-handler-proto');
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -19,19 +24,54 @@ server.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
 
+function createDir(dirName) {
+    if (!fs.existsSync(dirName)){
+        fs.mkdirSync(dirName);
+    }
+}
+
+function initDirs() {
+    createDir(config.tmpDir);
+    createDir(config.tmpDir + config.commitDir);
+    createDir(config.tmpDir + config.repoDir);    
+}
+
+initDirs();
+
 // Testing
-const dc = require('./data-controller');
-const dp = require('./data-processor');
-var owner = "mrbrendanwong";
-var repo = "beta_engine";
+// const dc = require('./data-controller');
+// const dp = require('./data-processor');
 
-//dc.getContent(owner, repo, "");
-dc.getAllContent(owner, repo).then(raw => dp.processContent(raw));
-//dc.getContributors(owner, repo).then(raw => dp.processContributors(raw));
-//dc.getBranches(owner, repo);
-//dc.getBranchCommits(owner, repo, "");
-//dc.getCommitComments(owner, repo, "85fcc360b59c2177b497577445ed3c882ce7a327");
-//dc.getCommit(owner, repo, "85fcc360b59c2177b497577445ed3c882ce7a327");
-//dc.getBlob(owner, repo, "ed32d72ad00cbb23e35daac1c0896ef5f17dbe40");
+// var owner = "mrbrendanwong";
+// var repo = "beta_engine";
+//handler.saveCommitContent(owner, repo);
+// handler.fetchAndProcessGithubData(owner, repo);
+/*
+handler.processRequest(owner, repo).then(() => {
+    console.log("(✿╹◡╹) VERSACE");
+}).catch(e => {
+    console.error("Not versace", e);
+});
+*/
 
-console.log("(✿╹◡╹) VERSACE");
+
+const dcp = require("./data-controller-proto");
+const dpp = require("./data-processor-proto");
+
+/*
+dcp.getAllCommits("beta_engine")
+    .then(commits => {
+        let processed = dpp.processCommitsProto(commits).then(results => {
+            console.log(results[0].files[0].diff)
+        })
+    });
+*/
+
+
+handlerProto.processRequest("https://github.com/mrbrendanwong/beta_engine").then(results => {
+    // console.log(results);
+    // console.log(results[4].files);
+    console.log("(✿╹◡╹) VERSACE");
+}).catch(e => {
+    console.error("Not versace", e);
+});
