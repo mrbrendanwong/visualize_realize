@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 const rimraf = require('rimraf'); // Remove all directories
 
 const config = require('../config');
@@ -98,7 +97,7 @@ function createCommitDir(commitIndex) {
 
 function removeUnmodifiedFileObjs(commits) {
     commits.forEach(commit => {
-        commit.files = commit.files.filter(f => f.diff > 0);
+        commit.files = commit.files.filter(f => f.diff !== 0);
     });
 }
 
