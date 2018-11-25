@@ -4,12 +4,12 @@ const octokit = require('@octokit/rest')({debug: true});
 // Too many API calls, so got a personal access token from git
 // May consider a downloading different library like nodegit instead of making
 // a lot of requests to github per commit for the state of the files
-const apiKey = require('../api_key.json').key;
+// const apiKey = require('../api_key.json').key;
 
-octokit.authenticate({
-    type: 'oauth',
-    token: apiKey
-});
+// octokit.authenticate({
+//     type: 'oauth',
+//     token: apiKey
+// });
 
 // Get the contributors of a repository
 async function getContributors(owner, repo) {

@@ -64,5 +64,4 @@ function getBlobs(files, repoName) {
     });
 }
 
-
 module.exports = {getRepo, getAllCommits, getBlobs};

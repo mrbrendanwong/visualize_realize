@@ -58,14 +58,15 @@ function processCommits(commits) {
                     emitter.on('entry', entry => {
                         if (entry.isBlob() && entry.name().endsWith(".java")) {
                             let fileDiff = mergedDeltas.find(f => f.fileName === entry.name());
+                            let fileObj = {
+                                fileName: entry.name(),
+                                fileSha: entry.sha(),
+                                diff: 0,
+                            };
                             if (fileDiff !== undefined) {
-                                let fileObj = {
-                                    fileName: entry.name(),
-                                    fileSha: entry.sha(),
-                                    diff: fileDiff.total_delta,
-                                };
-                                commitObj.files.push(fileObj);
+                                fileObj.diff = fileDiff.total_delta;
                             }
+                            commitObj.files.push(fileObj);
                         }
                     });
 

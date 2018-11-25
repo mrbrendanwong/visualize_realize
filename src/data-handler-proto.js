@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const rimraf = require('rimraf'); // Remove all directories
 
 const config = require('../config');
@@ -27,6 +28,7 @@ function processRequest(url) {
                     })
                     return Promise.all(promises);
             }).then(() => {
+                removeUnmodifiedFileObjs(commitObjects);
                 // TODO add analysis data to commits variable                
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
                 resolve(commitObjects);
@@ -91,6 +93,12 @@ function createCommitDir(commitIndex) {
                 resolve();
             }
         });
+    });
+}
+
+function removeUnmodifiedFileObjs(commits) {
+    commits.forEach(commit => {
+        commit.files = commit.files.filter(f => f.diff > 0);
     });
 }
 
