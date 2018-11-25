@@ -61,10 +61,12 @@ function processCommits(commits) {
                             let fileObj = {
                                 fileName: entry.name(),
                                 fileSha: entry.sha(),
-                                diff: 0,
                             };
+
                             if (fileDiff !== undefined) {
                                 fileObj.diff = fileDiff.total_delta;
+                            } else {
+                                fileObj.deleteThis = true;
                             }
                             commitObj.files.push(fileObj);
                         }

@@ -32,11 +32,6 @@ function getAllCommits(dirName) {
         nodegit.Repository.open(path.resolve(config.tmpDir + config.repoDir + dirName))
             .then(repo => repo.getMasterCommit())
             .then(firstCommit => {
-                // TODO: we have to get the latest commit on master, then find its parents
-                // And walk up the commit history
-                // Because commits on master is not a chain and each commit is not guaranteed to
-                // be the diff of the previous commit in the array
-
                 let history = firstCommit.history(nodegit.Revwalk.SORT.TIME, nodegit.Revwalk.SORT.REVERSE);
                 history.on("end", commits => resolve(commits));
                 history.start();

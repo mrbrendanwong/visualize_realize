@@ -15,6 +15,7 @@ function processRequest(url) {
             cloneRepo(url, dirName).then(() => {
                 return dc.getAllCommits(dirName);
             }).then(commits => {
+                commits = removeMergeCommits(commits);
                 return dp.processCommits(commits);
             }).then(processedResults => {
                     console.log("data-handler-proto.processRequest:: Finished processing commits");
@@ -96,9 +97,13 @@ function createCommitDir(commitIndex) {
 }
 
 function removeUnmodifiedFileObjs(commits) {
-    commits.forEach(commit => {
-        commit.files = commit.files.filter(f => f.diff !== 0);
+    commits.forEach((commit, index) => {
+        commit.files = commit.files.filter(f => f.deleteThis == undefined);
     });
+}
+
+function removeMergeCommits(commits) {
+    return commits.filter(c => c.parents().length == 1);
 }
 
 module.exports = {
