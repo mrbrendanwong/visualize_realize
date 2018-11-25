@@ -7,6 +7,7 @@ const _ = require('lodash');
 
 const config = require('../config');
 
+const batchSize = 5;
 const commentRegex = new RegExp('^\\s*\/\/', 'm');
 const papaparseConfig = {
     header: true,
@@ -27,14 +28,14 @@ async function analyzeCommits(commitObjects) {
 
 function analyseBatch(commitObjects, directories, batch) {
     let promises = [];
-    for (let i = 0; i < 5; i++) {
-        if (!directories[batch*5+i]) {
+    for (let i = 0; i < batchSize; i++) {
+        if (!directories[batch*batchSize+i]) {
             break;
         }
         promises.push(new Promise(resolve => {
-            processCouplingMetric(directories[batch*5+i]).then(couplingMetric => {
-                checkCode(directories[batch*5+i]).then(styleProblems => {
-                    const commitIndex = directories[batch*5+i].split('/').pop();
+            processCouplingMetric(directories[batch*batchSize+i]).then(couplingMetric => {
+                checkCode(directories[batch*batchSize+i]).then(styleProblems => {
+                    const commitIndex = directories[batch*batchSize+i].split('/').pop();
                     commitObjects[commitIndex].files.forEach(fileObj => {
                         const fileClassName = fileObj.fileName.split('.')[0];
 
@@ -45,8 +46,16 @@ function analyseBatch(commitObjects, directories, batch) {
                         // save PMD style problems to each file object at a commit
                         fileObj.styleBugs = [];
                         styleProblems.forEach(sp => {
+                            let styleBug = {};
                             if (sp.File.split('/').pop().split('.')[0] === fileClassName) {
-                                fileObj.styleBugs.push(sp);
+                                styleBug.package = sp.Package;
+                                styleBug.file = sp.File.split('/').pop();
+                                styleBug.priority = sp.Priority;
+                                styleBug.line = sp.Line;
+                                styleBug.description = sp.Description;
+                                styleBug.ruleSet = sp['Rule set'];
+                                styleBug.rule = sp.Rule;
+                                fileObj.styleBugs.push(styleBug);
                             }
                         });
                     });
