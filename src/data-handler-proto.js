@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 const rimraf = require('rimraf'); // Remove all directories
 
 const config = require('../config');
@@ -30,30 +29,9 @@ function processRequest(url) {
                     })
                     return Promise.all(promises);
             }).then(() => {
-                removeUnmodifiedFileObjs(commitObjects);
-                // TODO Get PMD bugs/codestyle errors of all java files at that state in the repo
-                const directories = fs.readdirSync(`${config.tmpDir}${config.commitDir}`).map(fileName => {
-                    return path.join(`${config.tmpDir}${config.commitDir}`, fileName);
-                }).filter(filePath => fs.lstatSync(filePath).isDirectory());
-
-                directories.forEach(dir => {
-                    qc.processCouplingMetric(dir).then(
-                        couplingMetric => {
-                            const commitIndex = dir.split('/').pop();
-                            commitObjects[commitIndex].files.map(fileObj => {
-                                const fileClassName = fileObj.fileName.split('.')[0];
-                                const fileCouplingMetric = couplingMetric[fileClassName];
-                                fileObj.coupling = fileCouplingMetric ? fileCouplingMetric : {};
-                            });
-                        }, reason => {
-                            console.log(reason);
-                        });
-                });
-
-                // TODO add analysis data to commits variable
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
-                resolve(commitObjects);
-                // TODO commitObjects to json file or something
+                removeUnmodifiedFileObjs(commitObjects);
+                qc.analyseCommits(commitObjects).then(() => resolve(commitObjects));
             }).catch(e => {
                 reject(e)
             });
@@ -129,4 +107,4 @@ function removeMergeCommits(commits) {
 
 module.exports = {
     processRequest,
-}
+};

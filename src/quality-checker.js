@@ -3,8 +3,9 @@ const fs = require('fs');
 const readline = require('readline');
 const path = require('path');
 const Papa = require('papaparse');
+const _ = require('lodash');
 
-module.exports = {checkCode, processCouplingMetric};
+const config = require('../config');
 
 const commentRegex = new RegExp('^\\s*\/\/', 'm');
 const papaparseConfig = {
@@ -12,39 +13,79 @@ const papaparseConfig = {
     skipEmptyLines: true
 };
 
+async function analyseCommits(commitObjects) {
+    const directories = fs.readdirSync(`${config.tmpDir}${config.commitDir}`).map(fileName => {
+        return path.join(`${config.tmpDir}${config.commitDir}`, fileName);
+    }).filter(filePath => fs.lstatSync(filePath).isDirectory());
+
+    for (let batch = 0; batch < Math.ceil(directories.length/5); batch++) {
+        await analyseBatch(commitObjects, directories, batch);
+    }
+}
+
+function analyseBatch(commitObjects, directories, batch) {
+    let promises = [];
+    for (let i = 0; i < 5; i++) {
+        if (!directories[batch*5+i]) {
+            break;
+        }
+        promises.push(new Promise(resolve => {
+            processCouplingMetric(directories[batch*5+i]).then(couplingMetric => {
+                checkCode(directories[batch*5+i]).then(styleProblems => {
+                    const commitIndex = directories[batch*5+i].split('/').pop();
+                    commitObjects[commitIndex].files.forEach(fileObj => {
+                        const fileClassName = fileObj.fileName.split('.')[0];
+
+                        // save coupling metric to each file object at a commit
+                        const fileCouplingMetric = couplingMetric[fileClassName];
+                        fileObj.coupling = fileCouplingMetric ? fileCouplingMetric : {};
+
+                        // save PMD style problems to each file object at a commit
+                        fileObj.styleBugs = [];
+                        styleProblems.forEach(sp => {
+                            if (sp.File.split('/').pop().split('.')[0] === fileClassName) {
+                                fileObj.styleBugs.push(sp);
+                            }
+                        });
+                    });
+                    resolve();
+                });
+            });
+        }));
+    }
+    return Promise.all(promises);
+}
+
+
 /**
- * Uses PMD to check the Java code in the sourceDirectory, finds all the problems from the rule set
- * and outputs it into the JSON file at outputFileLocation for the front-end to read later,
- * returns a promise to indicate when it's done or what errors there were
+ * Uses PMD to check the Java code in the sourceDirectory and finds all the problems from the rule set
  * @param {String} sourceDirectory reads code from here
- * @param {String} outputFileLocation location of the output JSON file
  * @returns {Promise}
  */
-function checkCode(sourceDirectory, outputFileLocation) {
+function checkCode(sourceDirectory) {
     return new Promise((resolve, reject) => {
-        let problemsFound = [];
-        const pmd = spawn('resources/pmd/bin/run.sh',
-            ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
-                '-f', 'csv', '-failOnViolation', 'false']);
+        try {
+            let problemsFound = [];
+            const pmd = spawn('resources/pmd/bin/run.sh',
+                ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
+                    '-f', 'csv', '-failOnViolation', 'false']);
 
-        let csvStream = pmd.stdout.pipe(Papa.parse(Papa.NODE_STREAM_INPUT, papaparseConfig));
-        csvStream.on('data', (problem) => {
-            problemsFound.push(problem);
-        });
-
-        pmd.stderr.on('data', (data) => {
-            console.log(`stderr: ${data}`);
-        });
-
-        pmd.on('close', (code) => {
-            console.log(`pmd child process exited with code ${code}`);
-            fs.writeFile(outputFileLocation, JSON.stringify(problemsFound), (error) => {
-                if (error) {
-                    reject(error);
-                }
+            let csvStream = pmd.stdout.pipe(Papa.parse(Papa.NODE_STREAM_INPUT, papaparseConfig));
+            csvStream.on('data', (problem) => {
+                problemsFound.push(problem);
             });
-            resolve();
-        });
+
+            // pmd.stderr.on('data', (data) => {
+            //     console.log(`stderr: ${data}`);
+            // });
+
+            pmd.on('close', (code) => {
+                // console.log(`pmd child process exited with code ${code}`);
+                resolve(problemsFound);
+            });
+        } catch(e) {
+            reject(e);
+        }
     })
 }
 
@@ -77,7 +118,7 @@ async function processCouplingMetric(sourceDirectory) {
                 });
                 rl.on('line', (line) => {
                     if (!commentRegex.test(line)) {
-                        fileNames.forEach((calledFile) => {
+                        fileNames.forEach(calledFile => {
                             if (calledFile !== currFile) {
                                 const calledFileClassName = path.parse(calledFile).base.split('.')[0];
                                 const calledFileRegex = new RegExp('(?<!")\\b' + calledFileClassName + '\\b(?!")', 'gm');
@@ -127,3 +168,7 @@ function *walkSync(dir) {
         }
     }
 }
+
+module.exports = {
+    analyseCommits,
+};
