@@ -14,6 +14,39 @@ const papaparseConfig = {
     skipEmptyLines: true
 };
 
+/**
+ * Takes all commit objects and updates each file at each commit with the results from checking the code
+ * with PMD and the processCouplingMetric function
+ * A commitObject will then look something like this:
+ *  {
+ *      commitSha: "commitSha",
+ *      login: "user",
+ *      files: [
+ *          {
+ *              fileName: "*.java",
+ *              fileSha: "fileSha",
+ *              diff: 2,
+ *              coupling: {
+ *                  "className": 3,
+ *                  "className2": 5
+ *              }
+ *              styleBugs: [
+ *                  {
+ *                      "package": "packageName",
+ *                      "file": "*.java",
+ *                      "priority": "3",
+ *                      "line": "410",
+ *                      "description": "This statement should have braces",
+ *                      "ruleSet": "Code Style",
+ *                      "rule": "ControlStatementBraces"
+ *                  }
+ *              ]
+ *          }
+ *      ]
+ *  }
+ * @param commitObjects
+ * @returns {Promise<void>}
+ */
 async function analyzeCommits(commitObjects) {
     console.log('data-analyzer.analyzeCommits:: Start analyzing');
     const directories = fs.readdirSync(`${config.tmpDir}${config.commitDir}`).map(fileName => {
