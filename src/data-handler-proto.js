@@ -4,7 +4,7 @@ const rimraf = require('rimraf'); // Remove all directories
 const config = require('../config');
 const dc = require('./data-controller-proto');
 const dp = require('./data-processor-proto');
-const qc = require('./quality-checker');
+const da = require('./data-analyzer');
 
 // Enter function
 function processRequest(url) {
@@ -31,7 +31,7 @@ function processRequest(url) {
             }).then(() => {
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
                 removeUnmodifiedFileObjs(commitObjects);
-                qc.analyseCommits(commitObjects).then(() => resolve(commitObjects));
+                da.analyzeCommits(commitObjects).then(() => resolve(commitObjects));
             }).catch(e => {
                 reject(e)
             });

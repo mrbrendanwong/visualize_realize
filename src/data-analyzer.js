@@ -13,7 +13,8 @@ const papaparseConfig = {
     skipEmptyLines: true
 };
 
-async function analyseCommits(commitObjects) {
+async function analyzeCommits(commitObjects) {
+    console.log('data-analyzer.analyzeCommits:: Start analyzing');
     const directories = fs.readdirSync(`${config.tmpDir}${config.commitDir}`).map(fileName => {
         return path.join(`${config.tmpDir}${config.commitDir}`, fileName);
     }).filter(filePath => fs.lstatSync(filePath).isDirectory());
@@ -21,6 +22,7 @@ async function analyseCommits(commitObjects) {
     for (let batch = 0; batch < Math.ceil(directories.length/5); batch++) {
         await analyseBatch(commitObjects, directories, batch);
     }
+    console.log('data-analyzer.analyzeCommits:: Finish analyzing');
 }
 
 function analyseBatch(commitObjects, directories, batch) {
@@ -170,5 +172,5 @@ function *walkSync(dir) {
 }
 
 module.exports = {
-    analyseCommits,
+    analyzeCommits,
 };
