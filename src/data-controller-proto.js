@@ -1,5 +1,4 @@
 const nodegit = require("nodegit"),
-    rimraf = require('rimraf'),
     path = require("path"),
     config = require('../config')
     ;
