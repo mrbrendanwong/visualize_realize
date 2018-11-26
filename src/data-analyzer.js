@@ -53,12 +53,12 @@ async function analyzeCommits(commitObjects) {
     }).filter(filePath => fs.lstatSync(filePath).isDirectory());
 
     for (let batch = 0; batch < Math.ceil(directories.length/5); batch++) {
-        await analyseBatch(commitObjects, directories, batch);
+        await analyzeBatch(commitObjects, directories, batch);
     }
     console.log('data-analyzer.analyzeCommits:: Finish analyzing');
 }
 
-function analyseBatch(commitObjects, directories, batch) {
+function analyzeBatch(commitObjects, directories, batch) {
     let promises = [];
     for (let i = 0; i < batchSize; i++) {
         if (!directories[batch*batchSize+i]) {
