@@ -2,7 +2,7 @@
 
 var once = false;
 
-var Boid = function (parent, position, velocity, size) {
+var Boid = function (parent, position, velocity, size, name) {
     // Initialise the boid parameters
     this.position = new Vector(position.x, position.y);
     this.velocity = new Vector(velocity.x, velocity.y);
@@ -10,6 +10,7 @@ var Boid = function (parent, position, velocity, size) {
 
     this.size = size;
     this.parent = parent;
+    this.name = name;
 
     this.bugs = {};
 };
@@ -32,18 +33,18 @@ Boid.prototype.draw = function () {
 /* Update the boid positions according to Reynold's rules.
 ** Called on every frame  */
 Boid.prototype.update = function () {
-    var v1 = this.cohesion();
-    var v2 = this.separation();
-    var v3 = this.alignment();
+    var coh = this.cohesion();
+    var sep = this.separation();
+    var ali = this.alignment();
 
     // Weight rules to get best behaviour
-    v1 = v1.mul(new Vector(1, 1));
-    v2 = v2.mul(new Vector(1, 1));
-    v3 = v3.mul(new Vector(1.1, 1.1));
+    coh = coh.mul(new Vector(1, 1));
+    sep = sep.mul(new Vector(0.7, 0.7));
+    ali = ali.mul(new Vector(1, 1));
 
-    this.applyForce(v1);
-    this.applyForce(v2);
-    this.applyForce(v3);
+    this.applyForce(coh);
+    this.applyForce(sep);
+    this.applyForce(ali);
 
     this.velocity = this.velocity.add(this.acceleration);
     this.velocity = this.velocity.limit(this.parent.options.speed);
@@ -55,7 +56,6 @@ Boid.prototype.update = function () {
     // Update the bugs
     for (const [issue, bug] of Object.entries(this.bugs)) {
         bug.update();
-        //bug.position = bug.position.add(bug.velocity);
     }
 };
 
@@ -63,17 +63,37 @@ Boid.prototype.update = function () {
 
 /* Cohesion rule: steer towards average position of local flockmates */
 Boid.prototype.cohesion = function () {
+    var coupling = {};
     var sum = new Vector(0, 0); // Average flockmate position
     var count = 0;  // number of local flockmates
 
-    // For each boid close enough to be seen...
-    for (var i = 0; i < this.parent.boids.length; i++) {
-        var d = this.position.dist(this.parent.boids[i].position);
-        if (d > 0 && d < this.parent.visibleRadius) {
-            sum = sum.add(this.parent.boids[i].position);
-            count++;
+    // Find your coupling data
+    let commitFiles = data.commits[this.parent.currentCommit].files;
+    for (let file in commitFiles) {
+        if (commitFiles[file].fileName === this.name) {
+            coupling = commitFiles[file].coupling;
+            break;
         }
     }
+
+    // For each boid
+    for (const [file, other] of Object.entries(this.parent.boids)) {
+        var d = this.position.dist(other.position);
+
+        // If you are too far and coupled, steer towards it
+        if (d > this.parent.visibleRadius && d < this.parent.visibleRadius * 3) {
+            if (coupling[other.name] !== undefined) {
+                let cplMult = coupling[other.name]; // !== undefined ? coupling[other.name] : 0.5;
+                sum = sum.add(other.position.mul(new Vector(cplMult, cplMult)));
+                count++;
+            }
+        } //else if (d > 0 && d < this.parent.visibleRadius) {
+            // If you are close enough to be seen, but not coupled, go away
+            //sum = sum.sub(other.position);
+            //count++;
+        //}
+    }
+
 
     if (count > 0) {
         // Calculate average position and return the force required to steer towards it
@@ -92,10 +112,10 @@ Boid.prototype.separation = function () {
 
     // For each boid which is too close, calculate a vector pointing
     // away from it weighted by the distance to it
-    for (var i = 0; i < this.parent.boids.length; i++) {
-        var d = this.position.dist(this.parent.boids[i].position) - (this.size * this.parent.boidRadius);
+    for (const [file, other] of Object.entries(this.parent.boids)) {
+        var d = Math.abs(this.position.dist(other.position)) - this.parent.boidRadius / 2;// - (this.size * this.parent.boidRadius);
         if (d > 0 && d < this.parent.separationDist) {
-            var diff = this.position.sub(this.parent.boids[i].position);
+            var diff = this.position.sub(other.position);
             diff = diff.normalise();
             diff = diff.div(new Vector(d, d));
             steer = steer.add(diff);
@@ -119,14 +139,29 @@ Boid.prototype.separation = function () {
 
 /* Alignment rule: steer toward average heading of local flockmates */
 Boid.prototype.alignment = function () {
+    var coupling = {};
     var sum = new Vector(0, 0); // Average velocity
     var count = 0;  // number of local flockmates
 
+    // Find your coupling data
+    let commitFiles = data.commits[this.parent.currentCommit].files;
+    for (let file in commitFiles) {
+        if (commitFiles[file].fileName === this.name) {
+            coupling = commitFiles[file].coupling;
+            break;
+        }
+    }
+
     // For each boid which is close enough to be seen
-    for (var i = 0; i < this.parent.boids.length; i++) {
-        var d = this.position.dist(this.parent.boids[i].position);
+    for (const [file, other] of Object.entries(this.parent.boids)) {
+        var d = this.position.dist(other.position);
         if (d > 0 && d < this.parent.visibleRadius) {
-            sum = sum.add(this.parent.boids[i].velocity);
+            // If it is not coupled, run away
+            if (coupling[other.name] === undefined) {
+                sum = sum.sub(other.velocity);
+            } else {
+                sum = sum.add(other.velocity);
+            }
             count++;
         }
     }
@@ -243,14 +278,11 @@ Bug.prototype.update = function () {
     // Separate from other bugs
     let count = 0;
     for (const [name, other] of Object.entries(this.parent.bugs)) {
-        //console.log(other);
         let d = this.position.dist(other.position);
         if (d > 0 && d < bugDistance) {
-            console.log(this.type + " is too close to " + name);
             let diff = this.position.sub(other.position).normalise();
             // Scale based on distance
             //diff = diff.div(new Vector(bugDistance, bugDistance));
-            console.log(diff);
             this.velocity = this.velocity.add(diff);
             count++;
         }
@@ -282,16 +314,15 @@ var BoidsCanvas = function (canvas) {
     };
 
     // Set customisable boids parameters
-    // TODO remove
     this.options = {
-        speed: 3,
+        speed: 1.5,
     };
 
     // Internal boids parameters
     this.visibleRadius = 150;
-    this.maxForce = 0.04;
-    this.separationDist = 80;
-    this.boidRadius = 5;  //size of the smallest boid
+    this.maxForce = 0.05;
+    this.separationDist = 50;
+    this.boidRadius = 45;  //size of the smallest boid
 
     this.maxDrawSize = 140;
     this.minDrawSize = 45;
@@ -377,7 +408,6 @@ BoidsCanvas.prototype.initialiseBoids = function () {
 
     for (var i = 0; i < data.commits[0].files.length; i++) {
         this.boids[data.commits[0].files[i].fileName] = this.generateBoid(data.commits[0].files[i]);
-        //this.boids.push(new Boid(this, position, velocity, size));
     }
 };
 
@@ -514,7 +544,7 @@ BoidsCanvas.prototype.generateBoid = function (file) {
         .mul(new Vector(1.5, 1.5));
     var size = file.diff;
 
-    var boid = new Boid(this, position, velocity, size);
+    var boid = new Boid(this, position, velocity, size, file.fileName);
 
     file.issues.forEach(function(issue, index) {
         if (!(issue in boid.bugs)) {
