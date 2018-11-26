@@ -1,5 +1,7 @@
 // Boid template code: https://github.com/MikeC1995/BoidsCanvas
 
+var once = false;
+
 var Boid = function (parent, position, velocity, size) {
     // Initialise the boid parameters
     this.position = new Vector(position.x, position.y);
@@ -20,6 +22,11 @@ Boid.prototype.draw = function () {
     this.parent.ctx.drawImage(this.parent.boidImage,
         this.position.x, this.position.y,
         drawSize, drawSize);
+
+    // Draw the bugs
+    for (const [issue, bug] of Object.entries(this.bugs)) {
+        bug.draw();
+    }
 };
 
 /* Update the boid positions according to Reynold's rules.
@@ -44,6 +51,12 @@ Boid.prototype.update = function () {
     this.position = this.position.add(this.velocity);
     this.acceleration = this.acceleration.mul(new Vector(0, 0));
     this.borders();
+
+    // Update the bugs
+    for (const [issue, bug] of Object.entries(this.bugs)) {
+        bug.update();
+        //bug.position = bug.position.add(bug.velocity);
+    }
 };
 
 // BOIDS FLOCKING RULES
@@ -163,6 +176,81 @@ Boid.prototype.applyForce = function (force) {
 
 //##############################################################################
 
+var Bug = function (parent, type) {
+    this.type = type;
+    this.parent = parent;
+
+    this.drawSize = 40;
+    this.followDistance = 50;
+
+    let a = Math.random() * 2 * Math.PI;
+    let r = this.followDistance * Math.sqrt(Math.random());
+
+    this.position = new Vector(r * Math.cos(a) + this.parent.position.x,
+        r * Math.sin(a) + this.parent.position.y);
+    let diff = this.parent.position.sub(this.position).normalise();
+    let dist = this.parent.position.dist(this.position);
+
+    this.velocity = diff.mul(new Vector(dist / this.followDistance, dist / this.followDistance));
+};
+
+Bug.prototype.draw = function() {
+    this.parent.parent.ctx.drawImage(this.parent.parent.bugImages[this.type],
+        this.position.x, this.position.y,
+        this.drawSize, this.drawSize);
+}
+
+Bug.prototype.update = function () {
+    // Follow the parent through the sides
+    let followX = this.parent.position.x;
+    let followY = this.parent.position.y;
+
+    // Didn't wrap
+    let nX = Math.abs(this.parent.position.x - this.position.x);
+    // Went to high and wrapped backwards
+    let highX = Math.abs(this.parent.position.x + this.parent.parent.canvas.width - this.position.x);
+    // Went too low and wrapped forwards
+    let lowX = Math.abs(this.parent.position.x - this.parent.parent.canvas.width - this.position.x);
+
+    if (nX > highX || nX > lowX) {
+        if (highX < lowX) {
+            followX = this.parent.position.x + this.parent.parent.canvas.width;
+        } else {
+            followX = this.parent.position.x - this.parent.parent.canvas.width;
+        }
+    }
+
+    // Didn't wrap
+    let nY = Math.abs(this.parent.position.y - this.position.y);
+    // Went to high and wrapped backwards
+    let highY = Math.abs(this.parent.position.y + this.parent.parent.canvas.height - this.position.y);
+    // Went too low and wrapped forwards
+    let lowY = Math.abs(this.parent.position.y - this.parent.parent.canvas.height - this.position.y);
+
+    if (nY > highY || nY > lowY) {
+        if (highY < lowY) {
+            followY = this.parent.position.y + this.parent.parent.canvas.height;
+        } else {
+            followY = this.parent.position.y - this.parent.parent.canvas.height;
+        }
+    }
+    let followPos = new Vector(followX, followY);
+    let diff = followPos.sub(this.position).normalise();
+    let dist = followPos.dist(this.position);
+    this.velocity = diff.mul(new Vector(dist / this.followDistance, dist / this.followDistance));
+
+    this.position = this.position.add(this.velocity);
+    this.borders();
+}
+
+// Implement torus boundaries
+Bug.prototype.borders = function () {
+    if (this.position.x < 0) this.position.x = this.parent.parent.canvas.width;
+    if (this.position.y < 0) this.position.y = this.parent.parent.canvas.height;
+    if (this.position.x > this.parent.parent.canvas.width) this.position.x = 0;
+    if (this.position.y > this.parent.parent.canvas.height) this.position.y = 0;
+};
+//##############################################################################
 
 // BOIDS CANVAS CLASS (FLOCK)
 var BoidsCanvas = function (canvas) {
@@ -186,7 +274,6 @@ var BoidsCanvas = function (canvas) {
 
     this.maxDrawSize = 140;
     this.minDrawSize = 45;
-    this.bugDrawSize = 30;
 
     let minMaxFile = this.findFileLimit();
     this.maxFileSize = minMaxFile["max"];
@@ -194,8 +281,8 @@ var BoidsCanvas = function (canvas) {
 
     // Images
     this.boidImage = document.getElementById("dogImg");
-    this.bugs = {
-        "ControlStatementBraces": document.getElementById("bombImg.png"),
+    this.bugImages = {
+        "ControlStatementBraces": document.getElementById("lightningImg"),
         "UselessParentheses": document.getElementById("ghostImg"),
         "LooseCoupling": document.getElementById("bombImg"),
     }
@@ -256,16 +343,19 @@ BoidsCanvas.prototype.init = function () {
     document.addEventListener('keydown', this.changeCommit.bind(this));
 
     // Update canvas
-    requestAnimationFrame(this.update.bind(this));
+    this.update();
+    if (!once) {
+        requestAnimationFrame(this.update.bind(this));
+    }
 };
 
 // Initialise boids according to options
 BoidsCanvas.prototype.initialiseBoids = function () {
     this.currentCommit = 0;
     this.boids = {};
-    // TODO make boids based on files
+
     for (var i = 0; i < data.commits[0].files.length; i++) {
-        this.boids[data.commits[0].files[i].fileName] = this.generateBoid(data.commits[0].files[i].diff);
+        this.boids[data.commits[0].files[i].fileName] = this.generateBoid(data.commits[0].files[i]);
         //this.boids.push(new Boid(this, position, velocity, size));
     }
 };
@@ -323,11 +413,14 @@ BoidsCanvas.prototype.changeCommit = function (event) {
         }
     }
 
-    // Add a boid if it doesn't exist
+    // Update boids
     commit.files.forEach(function (file) {
+        // Add a boid if it doesn't exist
         if (!(file.fileName in this.boids)) {
-            this.boids[file.fileName] = this.generateBoid(file.diff);
+            this.boids[file.fileName] = this.generateBoid(file);
         }
+        // Update bugs
+        if ()
     }.bind(this));
 }
 
@@ -338,12 +431,14 @@ BoidsCanvas.prototype.update = function () {
 
     // Update and draw boids
     for (const [file, boid] of Object.entries(this.boids)) {
-        boid.update();
         boid.draw();
+        boid.update();
     }
 
     // Request next frame
-    requestAnimationFrame(this.update.bind(this));
+    if (!once) {
+        requestAnimationFrame(this.update.bind(this));
+    }
 };
 
 // Helper method to find min and max file sizes
@@ -357,7 +452,6 @@ BoidsCanvas.prototype.findFileLimit = function () {
         let commit = data.commits[index];
         for (let fileIdx in commit.files) {
             let file = commit.files[fileIdx];
-            console.log(file.fileName + ":" + file.diff);
             if (file.fileName in fileList) {
                 fileList[file.fileName] += file.diff;
             } else {
@@ -375,7 +469,7 @@ BoidsCanvas.prototype.findFileLimit = function () {
 }
 
 // Helper method to generate a randomly placed boid
-BoidsCanvas.prototype.generateBoid = function (diff) {
+BoidsCanvas.prototype.generateBoid = function (file) {
     var position = new Vector(Math.floor(Math.random() * (this.canvas.width + 1)),
         Math.floor(Math.random() * (this.canvas.height + 1)));
     var max = 1;
@@ -384,8 +478,16 @@ BoidsCanvas.prototype.generateBoid = function (diff) {
         Math.random() * (max - min) + min)
         .normalise()
         .mul(new Vector(1.5, 1.5));
-    var size = diff;
-    return new Boid(this, position, velocity, size);
+    var size = file.diff;
+
+    var boid = new Boid(this, position, velocity, size);
+
+    file.issues.forEach(function(issue, index) {
+        if (!(issue in boid.bugs)) {
+            boid.bugs[issue] = new Bug(boid, issue);
+        }
+    });
+    return boid;
 }
 
 // Helper method to set multiple styles

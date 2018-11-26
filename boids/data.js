@@ -26,7 +26,7 @@ var data = {
 			}, {
 				"fileName" : "baz.java",
                 "diff" : 150,
-				"issues" : ["UselessParentheses"],
+				"issues" : ["UselessParentheses", "LooseCoupling", "ControlStatementBraces"],
 			}]
 		}, {
 			"commitSha" : "gef",
@@ -34,7 +34,7 @@ var data = {
 			"files" : [{
 				"fileName" : "foo.java",
                 "diff" : 20,
-				"issues" : ["bug", "ugly"],
+				"issues" : [],
 			}, {
 				"fileName" : "bar.java",
                 "diff" : 30,
