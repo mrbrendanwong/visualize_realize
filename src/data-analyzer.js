@@ -78,15 +78,16 @@ function analyzeBatch(commitObjects, directories, batch) {
                         // save PMD style problems to each file object at a commit
                         fileObj.styleBugs = [];
                         styleProblems.forEach(sp => {
-                            let styleBug = {};
                             if (sp.File.split('/').pop().split('.')[0] === fileClassName) {
-                                styleBug.package = sp.Package;
-                                styleBug.file = sp.File.split('/').pop();
-                                styleBug.priority = sp.Priority;
-                                styleBug.line = sp.Line;
-                                styleBug.description = sp.Description;
-                                styleBug.ruleSet = sp['Rule set'];
-                                styleBug.rule = sp.Rule;
+                                let styleBug = {
+                                    package: sp.Package,
+                                    file: sp.File.split('/').pop(),
+                                    priority: sp.Priority,
+                                    line: sp.Line,
+                                    description: sp.Description,
+                                    ruleSet: sp['Rule set'],
+                                    rule: sp.Rule
+                                };
                                 fileObj.styleBugs.push(styleBug);
                             }
                         });
