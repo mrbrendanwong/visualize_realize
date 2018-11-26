@@ -1,7 +1,6 @@
 // Boid template code: https://github.com/MikeC1995/BoidsCanvas
 
-var minsize = 25;
-var maxsize = 100;
+var bugSize = 30;
 
 var Boid = function(parent, position, velocity, size) {
   // Initialise the boid parameters
@@ -15,8 +14,12 @@ var Boid = function(parent, position, velocity, size) {
 
 Boid.prototype.draw = function () {
   // Draw boid
-  var dogImg = document.getElementById("dogImg");
-  this.parent.ctx.drawImage(dogImg, this.position.x, this.position.y, this.size, this.size);
+  let drawSize = ((this.parent.maxDrawSize - this.parent.minDrawSize) /
+                    (this.parent.maxFileSize - this.parent.minFileSize)) *
+      (this.size - this.parent.minFileSize) + this.parent.minDrawSize;
+  this.parent.ctx.drawImage(this.parent.boidImage,
+                            this.position.x, this.position.y,
+                            drawSize, drawSize);
 };
 
 /* Update the boid positions according to Reynold's rules.
@@ -181,6 +184,21 @@ var BoidsCanvas = function(canvas) {
   this.separationDist = 80;
   this.boidRadius = 5;  //size of the smallest boid
 
+  this.maxDrawSize = 140;
+  this.minDrawSize = 45;
+
+  let minMaxFile = this.findFileLimit();
+  this.maxFileSize = minMaxFile["max"];
+  this.minFileSize = minMaxFile["min"];
+
+  // Images
+  this.boidImage = document.getElementById("dogImg");
+  this.bugs = {
+    "ControlStatementBraces" : document.getElementById("bombImg.png"),
+    "UselessParentheses" : document.getElementById("ghostImg"),
+    "LooseCoupling" : document.getElementById("bombImg"),
+  }
+
   this.init();
 };
 
@@ -246,66 +264,70 @@ BoidsCanvas.prototype.initialiseBoids = function() {
   this.boids = {};
   // TODO make boids based on files
   for(var i = 0; i < data.commits[0].files.length; i++) {
-    var position = new Vector(Math.floor(Math.random()*(this.canvas.width+1)),
-                              Math.floor(Math.random()*(this.canvas.height+1)));
-    var max = 1;
-    var min = -1;
-    var velocity = new Vector(Math.random() * (max - min) + min,
-                              Math.random() * (max - min) + min)
-                    .normalise()
-                    .mul(new Vector(1.5, 1.5));
-    var size = Math.floor(Math.random() * (maxsize - minsize)) + minsize;
-
-    this.boids[data.commits[0].files[i].name] = new Boid(this, position, velocity, size);
+    this.boids[data.commits[0].files[i].fileName] = this.generateBoid(data.commits[0].files[i].diff);
     //this.boids.push(new Boid(this, position, velocity, size));
   }
 };
 
 BoidsCanvas.prototype.changeCommit = function(event) {
-  // Change the current commit
-  if (event.keyCode == 37) {
-    if (this.currentCommit == 0) {
+  let code;
+  let commit;
+
+  if (event.key !== undefined) {
+      code = event.key;
+  } else if (event.keyCode !== undefined) {
+      code = event.keyCode;
+  } else {
+    console.log("Unable to read key press.");
+  }
+  // Change the current commit and update sizes
+  switch (code) {
+    case "Left":
+    case "ArrowLeft":
+    case 37:
+      if (this.currentCommit === 0) {
+        return;
+      }
+      commit = data.commits[this.currentCommit];
+      commit.files.forEach(function(file) {
+        this.boids[file.fileName].size -= file.diff;
+      }.bind(this));
+      this.currentCommit--;
+        break;
+    case "Right":
+    case "ArrowRight":
+    case 39:
+      if (this.currentCommit === data.commits.length - 1) {
+        return;
+      }
+      this.currentCommit++;
+      commit = data.commits[this.currentCommit];
+      commit.files.forEach(function(file) {
+        if (file.fileName in this.boids) {
+          this.boids[file.fileName].size += file.diff;
+        }
+      }.bind(this));
+      break;
+    default:
       return;
-    }
-    this.currentCommit--;
-  } else if (event.keyCode == 39) {
-    if (this.currentCommit == data.commits.length - 1) {
-      return;
-    }
-    this.currentCommit++;
-  } else { 
-    return; 
   }
 
-  let commit = data.commits[this.currentCommit];
-  
+  commit = data.commits[this.currentCommit];
+
   // Delete boids if file was deleted
-  let fileList = commit.files.map(file => file.name);
-  console.log(fileList);
+  let fileList = commit.files.map(file => file.fileName);
   for (const [file, boid] of Object.entries(this.boids)) {
     if (!(fileList.includes(file))) {
       delete this.boids[file];
-      console.log("Deleted " + file);
     }
   }
 
-  // Update boids, add a boid if it doesn't exist
+  // Add a boid if it doesn't exist
   commit.files.forEach(function (file) {
-    if (!(file.name in this.boids)) {
-      var position = new Vector(Math.floor(Math.random()*(this.canvas.width+1)),
-                              Math.floor(Math.random()*(this.canvas.height+1)));
-      var max = 1;
-      var min = -1;
-      var velocity = new Vector(Math.random() * (max - min) + min,
-                                Math.random() * (max - min) + min)
-                      .normalise()
-                      .mul(new Vector(1.5, 1.5));
-      var size = Math.floor(Math.random() * (maxsize - minsize)) + minsize;
-      this.boids[file.name] = new Boid(this, position, velocity, size);
-      console.log("Added " + file.name);
+    if (!(file.fileName in this.boids)) {
+      this.boids[file.fileName] = this.generateBoid(file.diff);
     }
   }.bind(this));
-
 }
 
 BoidsCanvas.prototype.update = function() {
@@ -323,9 +345,52 @@ BoidsCanvas.prototype.update = function() {
   requestAnimationFrame(this.update.bind(this));
 };
 
+BoidsCanvas.prototype.findFileLimit = function ()  {
+    let fileList = {};
+
+    let min = data.commits[0].files[0].diff;
+    let max = min;
+
+    for (let index in data.commits) {
+        let commit = data.commits[index];
+        for (let fileIdx in commit.files) {
+            let file = commit.files[fileIdx];
+            console.log(file.fileName + ":" + file.diff);
+            if (file.fileName in fileList) {
+                fileList[file.fileName] += file.diff;
+            } else {
+                fileList[file.fileName] = file.diff;
+            }
+
+            if (fileList[file.fileName] > max) {
+                max = fileList[file.fileName];
+            } else if (fileList[file.fileName] < min) {
+                min = fileList[file.fileName];
+            }
+        }
+    }
+    return {"min" : min, "max" : max};
+}
+
+// Helper method to generate a randomly placed boid
+BoidsCanvas.prototype.generateBoid = function(diff) {
+  var position = new Vector(Math.floor(Math.random()*(this.canvas.width+1)),
+                              Math.floor(Math.random()*(this.canvas.height+1)));
+  var max = 1;
+  var min = -1;
+  var velocity = new Vector(Math.random() * (max - min) + min,
+                            Math.random() * (max - min) + min)
+                  .normalise()
+                  .mul(new Vector(1.5, 1.5));
+  var size = diff; //Math.floor(Math.random() * (maxsize - minsize)) + minsize;
+  return new Boid(this, position, velocity, size);
+}
+
 // Helper method to set multiple styles
 BoidsCanvas.prototype.setStyles = function (div, styles) {
   for (var property in styles) {
     div.style[property] = styles[property];
   }
 };
+
+// Helper method to find min and max

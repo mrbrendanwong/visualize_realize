@@ -1,20 +1,52 @@
 var data = {
 	"commits" : [{ 
-			"sha" : "abc",
+			"commitSha" : "abc",
+			"login" : "user",
 			"files" : [{
-				"name" : "foo.java"
+				"fileName" : "foo.java",
+				"diff" : 100,
+				"issues" : [],
 				}, {
-				"name" : "bar.java"
+				"fileName" : "bar.java",
+                "diff" : 50,
+				"issues" : [],
 				}
-			]
+			],
 		}, {
-			"sha" : "def",
+			"commitSha" : "def",
+			"login" : "user",
 			"files" : [{
-				"name" : "foo.java"
+				"fileName" : "foo.java",
+                "diff" : -5,
+				"issues" : [],
 			}, {
-				"name" : "bar.java"
+				"fileName" : "bar.java",
+                "diff" : -25,
+                "issues" : [],
 			}, {
-				"name" : "baz.java"
+				"fileName" : "baz.java",
+                "diff" : 150,
+				"issues" : [],
+			}]
+		}, {
+			"commitSha" : "gef",
+			"login" : "user",
+			"files" : [{
+				"fileName" : "foo.java",
+                "diff" : 20,
+				"issues" : ["bug", "ugly"],
+			}, {
+				"fileName" : "bar.java",
+                "diff" : 30,
+				"issues" : [],
+			}, {
+				"fileName" : "baz.java",
+                "diff" : -5,
+				"issues" : [],
+			}, {
+				"fileName" : "bat.java",
+                "diff" : 135,
+				"issues" : [],
 			}]
 		}
 	]
