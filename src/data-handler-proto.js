@@ -32,7 +32,6 @@ function processRequest(url) {
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
                 // removeUnmodifiedFileObjs(commitObjects);
                 da.analyzeCommits(commitObjects).then(() => resolve(commitObjects));
-                // resolve(commitObjects);
             }).catch(e => {
                 reject(e)
             });

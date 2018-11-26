@@ -26,10 +26,10 @@ const papaparseConfig = {
  *              fileSha: "fileSha",
  *              diff: 2,
  *              coupling: {
- *                  "className": 3,
- *                  "className2": 5
+ *                  "*.java": 3,
+ *                  "*.java": 5
  *              }
- *              styleBugs: [
+ *              issues: [
  *                  {
  *                      "package": "packageName",
  *                      "file": "*.java",
@@ -69,17 +69,15 @@ function analyzeBatch(commitObjects, directories, batch) {
                 checkCode(directories[batch*batchSize+i]).then(styleProblems => {
                     const commitIndex = directories[batch*batchSize+i].split('/').pop();
                     commitObjects[commitIndex].files.forEach(fileObj => {
-                        const fileClassName = fileObj.fileName.split('.')[0];
-
                         // save coupling metric to each file object at a commit
-                        const fileCouplingMetric = couplingMetric[fileClassName];
+                        const fileCouplingMetric = couplingMetric[fileObj.fileName];
                         fileObj.coupling = fileCouplingMetric ? fileCouplingMetric : {};
 
                         // save PMD style problems to each file object at a commit
-                        fileObj.styleBugs = [];
+                        fileObj.issues = [];
                         styleProblems.forEach(sp => {
-                            if (sp.File.split('/').pop().split('.')[0] === fileClassName) {
-                                let styleBug = {
+                            if (sp.File.split('/').pop() === fileObj.fileName) {
+                                let issue = {
                                     package: sp.Package,
                                     file: sp.File.split('/').pop(),
                                     priority: sp.Priority,
@@ -88,7 +86,7 @@ function analyzeBatch(commitObjects, directories, batch) {
                                     ruleSet: sp['Rule set'],
                                     rule: sp.Rule
                                 };
-                                fileObj.styleBugs.push(styleBug);
+                                fileObj.issues.push(issue);
                             }
                         });
                     });
@@ -154,8 +152,8 @@ async function processCouplingMetric(sourceDirectory) {
         }
         fileNames.forEach((currFile) => {
             let filePromise = new Promise((resolve) => {
-                const currFileClassName = path.parse(currFile).base.split('.')[0];
-                metrics[currFileClassName] = {};
+                const currFileName = path.parse(currFile).base;
+                metrics[currFileName] = {};
                 const rl = readline.createInterface({
                     input: fs.createReadStream(currFile),
                     crlfDelay: Infinity
@@ -164,12 +162,13 @@ async function processCouplingMetric(sourceDirectory) {
                     if (!commentRegex.test(line)) {
                         fileNames.forEach(calledFile => {
                             if (calledFile !== currFile) {
-                                const calledFileClassName = path.parse(calledFile).base.split('.')[0];
+                                const calledFileName = path.parse(calledFile).base;
+                                const calledFileClassName = calledFileName.split('.')[0];
                                 const calledFileRegex = new RegExp('(?<!")\\b' + calledFileClassName + '\\b(?!")', 'gm');
                                 const regexMatches = line.match(calledFileRegex);
                                 if (regexMatches && regexMatches.length > 0) {
-                                    const currMetric = metrics[currFileClassName][calledFileClassName];
-                                    metrics[currFileClassName][calledFileClassName] = currMetric !== undefined ? currMetric + regexMatches.length : regexMatches.length;
+                                    const currMetric = metrics[currFileName][calledFileName];
+                                    metrics[currFileName][calledFileName] = currMetric !== undefined ? currMetric + regexMatches.length : regexMatches.length;
                                 }
                             }
                         })
