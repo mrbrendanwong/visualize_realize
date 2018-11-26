@@ -48,8 +48,10 @@ function getBlobs(files, repoName) {
         nodegit.Repository.open(path.resolve(config.tmpDir + config.repoDir + repoName))
             .then(repo => {
                 files.forEach(f => {
-                    let promise = repo.getBlob(f.fileSha);
-                    promises.push(promise);
+                    if (f.fileSha !== undefined) {
+                        let promise = repo.getBlob(f.fileSha);
+                        promises.push(promise);
+                    }
                 });
                 Promise.all(promises).then(result => {
                     resolve(result);

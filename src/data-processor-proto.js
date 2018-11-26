@@ -55,8 +55,11 @@ function processCommits(commits) {
                         }
                     });
 
+                    let usedDeltas = [];
                     emitter.on('entry', entry => {
                         if (entry.isBlob() && entry.name().endsWith(".java")) {
+                            // let fileDiffIndex = mergedDeltas.findIndex(f => f.fileName === entry.name());
+                            // let fileDiff = mergedDeltas[fileDiffIndex];
                             let fileDiff = mergedDeltas.find(f => f.fileName === entry.name());
                             let fileObj = {
                                 fileName: entry.name(),
@@ -66,13 +69,29 @@ function processCommits(commits) {
                             if (fileDiff !== undefined) {
                                 fileObj.diff = fileDiff.total_delta;
                             } else {
-                                fileObj.deleteThis = true;
+                                fileObj.diff = 0;
                             }
                             commitObj.files.push(fileObj);
+                            // mergedDeltas.splice(fileDiffIndex, 1);
+                            usedDeltas.push(fileDiff);
                         }
                     });
 
-                    emitter.on('end', () => resolve(commitObj));
+                    emitter.on('end', () => {
+                        // push deleted files into commitObj
+                        const deletedFileDeltas = mergedDeltas.filter(md => {
+                            return md.fileName.endsWith('.java') && !usedDeltas.includes(md);
+                        });
+                        deletedFileDeltas.forEach(dfd => {
+                            const deletedFileObj = {
+                                fileName: dfd.fileName,
+                                diff: dfd.total_delta,
+                                deleted: true
+                            };
+                            commitObj.files.push(deletedFileObj);
+                        });
+                        return resolve(commitObj);
+                    });
 
                     emitter.start();
                 });

@@ -24,14 +24,15 @@ function processRequest(url) {
                     let promises = [];
                     commitObjects = processedResults;
                     commitObjects.forEach((commitObj, commitIndex) => {
-                        let promise = saveBlobsAtCommitToDisk(commitObj, commitIndex, dirName)
+                        let promise = saveBlobsAtCommitToDisk(commitObj, commitIndex, dirName);
                         promises.push(promise);
-                    })
+                    });
                     return Promise.all(promises);
             }).then(() => {
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
-                removeUnmodifiedFileObjs(commitObjects);
+                // removeUnmodifiedFileObjs(commitObjects);
                 da.analyzeCommits(commitObjects).then(() => resolve(commitObjects));
+                // resolve(commitObjects);
             }).catch(e => {
                 reject(e)
             });
