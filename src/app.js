@@ -71,7 +71,7 @@ dcp.getAllCommits("beta_engine")
 handlerProto.processRequest("https://github.com/mrbrendanwong/beta_engine").then(results => {
     // console.log(results);
     // console.log(results[4].files);
-    fs.writeFileSync('results.json', JSON.stringify(results));
+    fs.writeFileSync('boids/results.js', 'const results = ' + JSON.stringify(results));
     console.log("(✿╹◡╹) VERSACE");
 }).catch(e => {
     console.error("Not versace", e);
