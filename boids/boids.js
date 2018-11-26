@@ -420,8 +420,22 @@ BoidsCanvas.prototype.changeCommit = function (event) {
             this.boids[file.fileName] = this.generateBoid(file);
         }
         // Update bugs
-        if ()
+        let thisBoid = this.boids[file.fileName];
+        // Add a bug if it appears
+        for (let index in file.issues) {
+            let bugName = file.issues[index];
+            if (!(bugName in thisBoid.bugs)) {
+                thisBoid.bugs[bugName] = new Bug(thisBoid, bugName);
+            }
+        }
+        // Delete the bug if it no longer exists
+        for (let bugName in thisBoid.bugs) {
+            if (Object.values(file.issues).indexOf(bugName) === -1) {
+                delete thisBoid.bugs[bugName];
+            }
+        }
     }.bind(this));
+    console.log("---");
 }
 
 BoidsCanvas.prototype.update = function () {

@@ -22,11 +22,11 @@ var data = {
 			}, {
 				"fileName" : "bar.java",
                 "diff" : -25,
-                "issues" : [],
+                "issues" : ["UselessParentheses", "LooseCoupling", "ControlStatementBraces"],
 			}, {
-				"fileName" : "baz.java",
+                "fileName" : "baz.java",
                 "diff" : 150,
-				"issues" : ["UselessParentheses", "LooseCoupling", "ControlStatementBraces"],
+                "issues" : [],
 			}]
 		}, {
 			"commitSha" : "gef",
