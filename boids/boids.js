@@ -11,11 +11,11 @@ if (realData) {
         for (let fileIndex in commitFiles) {
             let file = commitFiles[fileIndex];
             let bugSet = new Set();
-            for (let bugIndex in file.styleBugs) {
-                bugSet.add(file.styleBugs[bugIndex].rule);
+            for (let issueIndex in file.issues) {
+                bugSet.add(file.issues[issueIndex].rule);
             }
             file.issues = Array.from(bugSet);
-            // delete file.styleBugs;
+            // delete file.issues;
         }
         // delete data[commitIndex].committer;
     }
@@ -458,6 +458,7 @@ BoidsCanvas.prototype.changeCommit = function (event) {
                 this.boids[file.fileName].size -= file.diff;
             }.bind(this));
             this.currentCommit--;
+            console.log(this.currentCommit);
             break;
         case "Right":
         case "ArrowRight":
@@ -472,6 +473,7 @@ BoidsCanvas.prototype.changeCommit = function (event) {
                     this.boids[file.fileName].size += file.diff;
                 }
             }.bind(this));
+            console.log(this.currentCommit);
             break;
         default:
             return;
