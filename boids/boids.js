@@ -1,6 +1,27 @@
 // Boid template code: https://github.com/MikeC1995/BoidsCanvas
 
+// If true, only renders one frame
 var once = false;
+
+// Preprocess the data
+var realData = true;
+if (realData) {
+    for (let commitIndex in data) {
+        let commitFiles = data[commitIndex].files;
+        for (let fileIndex in commitFiles) {
+            let file = commitFiles[fileIndex];
+            let bugSet = new Set();
+            for (let bugIndex in file.styleBugs) {
+                bugSet.add(file.styleBugs[bugIndex].rule);
+            }
+            file.issues = Array.from(bugSet);
+            // delete file.styleBugs;
+        }
+        // delete data[commitIndex].committer;
+    }
+    data = {"commits": data};
+}
+console.log(data);
 
 var Boid = function (parent, position, velocity, size, name) {
     // Initialise the boid parameters
@@ -328,8 +349,10 @@ var BoidsCanvas = function (canvas) {
     this.minDrawSize = 45;
 
     let minMaxFile = this.findFileLimit();
+    this.currentCommit = minMaxFile["firstFileCommitIndex"];
     this.maxFileSize = minMaxFile["max"];
     this.minFileSize = minMaxFile["min"];
+    console.log("Starting on commit " + this.currentCommit);
 
     // Images
     this.boidImage = document.getElementById("dogImg");
@@ -403,11 +426,11 @@ BoidsCanvas.prototype.init = function () {
 
 // Initialise boids according to options
 BoidsCanvas.prototype.initialiseBoids = function () {
-    this.currentCommit = 0;
+    // this.currentCommit = 0;
     this.boids = {};
-
-    for (var i = 0; i < data.commits[0].files.length; i++) {
-        this.boids[data.commits[0].files[i].fileName] = this.generateBoid(data.commits[0].files[i]);
+    let currentCommitFiles = data.commits[this.currentCommit].files;
+    for (var i = 0; i < currentCommitFiles.length; i++) {
+        this.boids[currentCommitFiles[i].fileName] = this.generateBoid(currentCommitFiles[i]);
     }
 };
 
@@ -508,8 +531,11 @@ BoidsCanvas.prototype.update = function () {
 // Helper method to find min and max file sizes
 BoidsCanvas.prototype.findFileLimit = function () {
     let fileList = {};
-
-    let min = data.commits[0].files[0].diff;
+    let i = 0;
+    while (data.commits[i].files[0] === undefined) {
+        i++;
+    }
+    let min = data.commits[i].files[0].diff;
     let max = min;
 
     for (let index in data.commits) {
@@ -529,7 +555,7 @@ BoidsCanvas.prototype.findFileLimit = function () {
             }
         }
     }
-    return {"min": min, "max": max};
+    return {"min": min, "max": max, "firstFileCommitIndex": i};
 }
 
 // Helper method to generate a randomly placed boid
