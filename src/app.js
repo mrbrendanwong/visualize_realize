@@ -33,7 +33,7 @@ function createDir(dirName) {
 function initDirs() {
     createDir(config.tmpDir);
     createDir(config.tmpDir + config.commitDir);
-    createDir(config.tmpDir + config.repoDir);    
+    createDir(config.tmpDir + config.repoDir);
 }
 
 initDirs();
@@ -71,6 +71,7 @@ dcp.getAllCommits("beta_engine")
 handlerProto.processRequest("https://github.com/mrbrendanwong/beta_engine").then(results => {
     // console.log(results);
     // console.log(results[4].files);
+    fs.writeFileSync('results.json', JSON.stringify(results));
     console.log("(✿╹◡╹) VERSACE");
 }).catch(e => {
     console.error("Not versace", e);

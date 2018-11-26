@@ -5,3 +5,4 @@ package-lock.json
 api_key.json
 *tmpFiles*
 .vscode
+/resources/pmd

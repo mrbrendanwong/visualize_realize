@@ -14,6 +14,8 @@
   "dependencies": {
     "@octokit/rest": "^15.17.0",
     "nodegit": "^0.23.0",
-    "rimraf": "^2.6.2"
+    "rimraf": "^2.6.2",
+    "lodash": "latest",
+    "papaparse": "^4.6.2"
   }
 }

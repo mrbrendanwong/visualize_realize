@@ -4,6 +4,7 @@ const rimraf = require('rimraf'); // Remove all directories
 const config = require('../config');
 const dc = require('./data-controller-proto');
 const dp = require('./data-processor-proto');
+const da = require('./data-analyzer');
 
 // Enter function
 function processRequest(url) {
@@ -28,11 +29,9 @@ function processRequest(url) {
                     })
                     return Promise.all(promises);
             }).then(() => {
-                removeUnmodifiedFileObjs(commitObjects);
-                // TODO add analysis data to commits variable                
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
-                resolve(commitObjects);
-                // TODO commitObjects to json file or something
+                removeUnmodifiedFileObjs(commitObjects);
+                da.analyzeCommits(commitObjects).then(() => resolve(commitObjects));
             }).catch(e => {
                 reject(e)
             });
@@ -108,4 +107,4 @@ function removeMergeCommits(commits) {
 
 module.exports = {
     processRequest,
-}
+};
