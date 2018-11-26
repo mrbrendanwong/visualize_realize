@@ -5,7 +5,7 @@ var data = {
 			"files" : [{
 				"fileName" : "foo.java",
 				"diff" : 100,
-				"issues" : [],
+				"issues" : ["LooseCoupling"],
 				}, {
 				"fileName" : "bar.java",
                 "diff" : 50,
@@ -26,7 +26,7 @@ var data = {
 			}, {
 				"fileName" : "baz.java",
                 "diff" : 150,
-				"issues" : [],
+				"issues" : ["UselessParentheses"],
 			}]
 		}, {
 			"commitSha" : "gef",
