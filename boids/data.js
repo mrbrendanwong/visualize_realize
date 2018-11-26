@@ -5,7 +5,7 @@ var data = {
 			"files" : [{
 				"fileName" : "foo.java",
 				"diff" : 100,
-				"issues" : ["LooseCoupling"],
+				"issues" : ["LooseCoupling", "UselessParentheses"],
 				}, {
 				"fileName" : "bar.java",
                 "diff" : 50,

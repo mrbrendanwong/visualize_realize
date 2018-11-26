@@ -201,6 +201,7 @@ Bug.prototype.draw = function() {
 }
 
 Bug.prototype.update = function () {
+    let bugDistance = 50;
     // Follow the parent through the sides
     let followX = this.parent.position.x;
     let followY = this.parent.position.y;
@@ -238,6 +239,26 @@ Bug.prototype.update = function () {
     let diff = followPos.sub(this.position).normalise();
     let dist = followPos.dist(this.position);
     this.velocity = diff.mul(new Vector(dist / this.followDistance, dist / this.followDistance));
+
+    // Separate from other bugs
+    let count = 0;
+    for (const [name, other] of Object.entries(this.parent.bugs)) {
+        //console.log(other);
+        let d = this.position.dist(other.position);
+        if (d > 0 && d < bugDistance) {
+            console.log(this.type + " is too close to " + name);
+            let diff = this.position.sub(other.position).normalise();
+            // Scale based on distance
+            //diff = diff.div(new Vector(bugDistance, bugDistance));
+            console.log(diff);
+            this.velocity = this.velocity.add(diff);
+            count++;
+        }
+    }
+    if (count > 0) {
+        this.velocity = this.velocity.div(new Vector(count, count));
+    }
+
 
     this.position = this.position.add(this.velocity);
     this.borders();
@@ -435,7 +456,6 @@ BoidsCanvas.prototype.changeCommit = function (event) {
             }
         }
     }.bind(this));
-    console.log("---");
 }
 
 BoidsCanvas.prototype.update = function () {
