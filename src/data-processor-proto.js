@@ -66,7 +66,7 @@ function processCommits(commits) {
                             if (fileDiff !== undefined) {
                                 fileObj.diff = fileDiff.total_delta;
                             } else {
-                                fileObj.deleteThis = true;
+                                fileObj.diff = 0;
                             }
                             commitObj.files.push(fileObj);
                         }
