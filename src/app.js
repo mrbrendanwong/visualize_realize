@@ -73,8 +73,7 @@ dcp.getAllCommits("beta_engine")
     });
 */
 
-
-handlerProto.processRequest("https://github.com/mrbrendanwong/beta_engine").then(results => {
+handlerProto.processRequest(process.argv[2]).then(results => {
     // console.log(results);
     // console.log(results[4].files);
     fs.writeFileSync('boids/results.js', 'let data = ' + JSON.stringify(results));
