@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>BoidsCanvas</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <!-- Live version hosted at: http://codepen.io/MikeC1995/pen/RWXoOe -->
+    <div id="boids-canvas"></div>
+    <div style="visibility: hidden;">
+      <img id="dogImg" src="dog.png">
+      <img id="ghostImg" src="ghost.png">
+      <img id="lightningImg" src="lightning.png">
+      <img id="bombImg" src="bomb.png">
+    </div>
+
+    <!-- ******  RESOURCES ****** -->
+    <!-- BOIDS -->
+    <!--<script type="text/javascript" src="data.js"></script>-->
+    <script type="text/javascript" src="results.js"></script>
+    <script type="text/javascript" src="vec2.js"></script>
+    <script type="text/javascript" src="boids.js"></script>
+    <!-- INIT -->
+    <script type="text/javascript">
+      var canvasDiv = document.getElementById('boids-canvas');
+      var boidsCanvas = new BoidsCanvas(canvasDiv);
+    </script>
+  </body>
+</html>
