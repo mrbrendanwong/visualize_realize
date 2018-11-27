@@ -23,6 +23,26 @@ if (realData) {
 }
 console.log(data);
 
+let leftArrow = document.getElementById("leftArrowImg");
+leftArrow.addEventListener('click', function(e) {
+    let leftEvent = document.createEvent("HTMLEvents");
+    leftEvent.initEvent("keydown", true, false);
+    leftEvent.key = "ArrowLeft";
+    leftEvent.code = "ArrowLeft";
+    leftEvent.keyCode = 37;
+    document.dispatchEvent(leftEvent);
+});
+
+let rightArrow = document.getElementById("rightArrowImg");
+rightArrow.addEventListener('click', function(e) {
+    let rightEvent = document.createEvent("HTMLEvents");
+    rightEvent.initEvent("keydown", true, false);
+    rightEvent.key = "ArrowRight";
+    rightEvent.code = "ArrowRight";
+    rightEvent.keyCode = 39;
+    document.dispatchEvent(rightEvent);
+});
+
 var Boid = function (parent, position, velocity, size, name) {
     // Initialise the boid parameters
     this.position = new Vector(position.x, position.y);
@@ -402,7 +422,7 @@ var BoidsCanvas = function (canvas) {
     this.currentCommit = minMaxFile["firstFileCommitIndex"];
     this.maxFileSize = minMaxFile["max"];
     this.minFileSize = minMaxFile["min"];
-    console.log("Starting on commit " + this.currentCommit);
+
     let commitDisplay = document.getElementById("commitDisplay");
     commitDisplay.innerText = this.currentCommit;
     if (this.currentCommit === 0) {
@@ -509,6 +529,8 @@ BoidsCanvas.prototype.changeCommit = function (event) {
 
     if (event.key !== undefined) {
         code = event.key;
+    } else if (event.code !== undefined) {
+        code = event.code;
     } else if (event.keyCode !== undefined) {
         code = event.keyCode;
     } else {
@@ -519,6 +541,9 @@ BoidsCanvas.prototype.changeCommit = function (event) {
         case "Left":
         case "ArrowLeft":
         case 37:
+        case "a":
+        case "KeyA":
+        case 65:
             if (this.currentCommit === 0) {
                 return;
             }
@@ -539,6 +564,9 @@ BoidsCanvas.prototype.changeCommit = function (event) {
         case "Right":
         case "ArrowRight":
         case 39:
+        case "KeyD":
+        case "d":
+        case 68:
             if (this.currentCommit === data.commits.length - 1) {
                 return;
             }
@@ -549,7 +577,6 @@ BoidsCanvas.prototype.changeCommit = function (event) {
                     this.boids[file.fileName].size += file.diff;
                 }
             }.bind(this));
-            console.log(this.currentCommit);
 
             if (this.currentCommit === 1) {
                 let leftArrow = document.getElementById("leftArrowImg");
