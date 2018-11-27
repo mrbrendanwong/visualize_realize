@@ -110,8 +110,8 @@ function checkCode(sourceDirectory) {
         try {
             let problemsFound = [];
             let pmdFile = process.platform === "win32" ? 'pmd.bat' : 'run.sh';
-            const pmd = spawn(`resources/pmd/bin/${pmdFile}`,
-                ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
+            const pmd = spawn(path.join('resources', 'pmd', 'bin', pmdFile),
+                ['pmd', '-d', sourceDirectory, '-R', path.join('resources', 'rulesets', 'quickstart.xml'),
                     '-f', 'csv', '-failOnViolation', 'false']);
 
             let csvStream = pmd.stdout.pipe(Papa.parse(Papa.NODE_STREAM_INPUT, papaparseConfig));
