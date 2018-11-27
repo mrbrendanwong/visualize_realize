@@ -67,7 +67,7 @@ function analyzeBatch(commitObjects, directories, batch) {
         promises.push(new Promise(resolve => {
             processCouplingMetric(directories[batch*batchSize+i]).then(couplingMetric => {
                 checkCode(directories[batch*batchSize+i]).then(styleProblems => {
-                    const commitIndex = directories[batch*batchSize+i].split('/').pop();
+                    const commitIndex = path.basename(directories[batch*batchSize+i]);
                     commitObjects[commitIndex].files.forEach(fileObj => {
                         const fileClassName = fileObj.fileName.split('.')[0];
 
@@ -110,7 +110,8 @@ function checkCode(sourceDirectory) {
     return new Promise((resolve, reject) => {
         try {
             let problemsFound = [];
-            const pmd = spawn('resources/pmd/bin/run.sh',
+            let pmdFile = process.platform === "win32" ? 'pmd.bat' : 'run.sh';
+            const pmd = spawn(`resources/pmd/bin/${pmdFile}`,
                 ['pmd', '-d', sourceDirectory, '-R', 'resources/rulesets/quickstart.xml',
                     '-f', 'csv', '-failOnViolation', 'false']);
 
