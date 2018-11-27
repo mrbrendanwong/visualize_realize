@@ -30,7 +30,6 @@ function processRequest(url) {
                     return Promise.all(promises);
             }).then(() => {
                 console.log("data-handler-proto.processRequest:: All commit blobs written to disk");
-                // removeUnmodifiedFileObjs(commitObjects);
                 da.analyzeCommits(commitObjects).then(() => resolve(commitObjects));
             }).catch(e => {
                 reject(e)
@@ -92,12 +91,6 @@ function createCommitDir(commitIndex) {
                 resolve();
             }
         });
-    });
-}
-
-function removeUnmodifiedFileObjs(commits) {
-    commits.forEach((commit, index) => {
-        commit.files = commit.files.filter(f => f.deleteThis == undefined);
     });
 }
 
