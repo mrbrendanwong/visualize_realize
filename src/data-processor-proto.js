@@ -55,7 +55,6 @@ function processCommits(commits) {
                         }
                     });
 
-                    let usedDeltas = [];
                     emitter.on('entry', entry => {
                         if (entry.isBlob() && entry.name().endsWith(".java")) {
                             let fileDiff = mergedDeltas.find(f => f.fileName === entry.name());
@@ -70,25 +69,10 @@ function processCommits(commits) {
                                 fileObj.diff = 0;
                             }
                             commitObj.files.push(fileObj);
-                            usedDeltas.push(fileDiff);
                         }
                     });
 
-                    emitter.on('end', () => {
-                        // push deleted files into commitObj
-                        // const deletedFileDeltas = mergedDeltas.filter(md => {
-                        //     return md.fileName.endsWith('.java') && !usedDeltas.includes(md);
-                        // });
-                        // deletedFileDeltas.forEach(dfd => {
-                        //     const deletedFileObj = {
-                        //         fileName: dfd.fileName,
-                        //         diff: dfd.total_delta,
-                        //         deleted: true
-                        //     };
-                        //     commitObj.files.push(deletedFileObj);
-                        // });
-                        return resolve(commitObj);
-                    });
+                    emitter.on('end', () => resolve(commitObj));
 
                     emitter.start();
                 });
