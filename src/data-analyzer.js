@@ -76,10 +76,11 @@ function analyzeBatch(commitObjects, directories, batch) {
                         // save PMD style problems to each file object at a commit
                         fileObj.issues = [];
                         styleProblems.forEach(sp => {
-                            if (sp.File.split('/').pop() === fileObj.fileName) {
+                            let spFileName = path.basename(sp.File);
+                            if (spFileName === fileObj.fileName) {
                                 let issue = {
                                     package: sp.Package,
-                                    file: sp.File.split('/').pop(),
+                                    file: spFileName,
                                     priority: sp.Priority,
                                     line: sp.Line,
                                     description: sp.Description,
@@ -153,7 +154,7 @@ async function processCouplingMetric(sourceDirectory) {
         }
         fileNames.forEach((currFile) => {
             let filePromise = new Promise((resolve) => {
-                const currFileName = path.parse(currFile).base;
+                const currFileName = path.basename(currFile);
                 metrics[currFileName] = {};
                 const rl = readline.createInterface({
                     input: fs.createReadStream(currFile),
@@ -163,7 +164,7 @@ async function processCouplingMetric(sourceDirectory) {
                     if (!commentRegex.test(line)) {
                         fileNames.forEach(calledFile => {
                             if (calledFile !== currFile) {
-                                const calledFileName = path.parse(calledFile).base;
+                                const calledFileName = path.basename(calledFile);
                                 const calledFileClassName = calledFileName.split('.')[0];
                                 const calledFileRegex = new RegExp('(?<!")\\b' + calledFileClassName + '\\b(?!")', 'gm');
                                 const regexMatches = line.match(calledFileRegex);
