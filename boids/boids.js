@@ -23,6 +23,40 @@ if (realData) {
 }
 console.log(data);
 
+// Howler objects
+const woof = new Howl({
+    src: "resources/woof.mp3"
+});
+
+const lightning = new Howl({
+    src: 'resources/lightning.mp3'
+});
+
+const bomb = new Howl({
+    src: 'resources/bomb.mp3'
+});
+
+const booLaugh = new Howl({
+    src: 'resources/boo_laugh.mp3'
+});
+
+const playSound = (bugType) => {
+    switch(bugType) {
+        case 'ControlStatementBraces':
+            lightning.play();
+            break;
+        case 'LooseCoupling':
+            bomb.play();
+            break;
+        case 'UselessParentheses':
+            booLaugh.play();
+            break;
+        default:
+            woof.play();
+            break;
+    }
+};
+
 let leftArrow = document.getElementById("leftArrowImg");
 leftArrow.addEventListener('click', function(e) {
     let leftEvent = document.createEvent("HTMLEvents");
@@ -617,6 +651,7 @@ BoidsCanvas.prototype.changeCommit = function (event) {
         // Add a boid if it doesn't exist
         if (!(file.fileName in this.boids)) {
             this.boids[file.fileName] = this.generateBoid(file);
+            playSound();
         }
         // Update bugs
         let thisBoid = this.boids[file.fileName];
@@ -625,6 +660,7 @@ BoidsCanvas.prototype.changeCommit = function (event) {
             let bugName = file.issues[index];
             if (!(bugName in thisBoid.bugs)) {
                 thisBoid.bugs[bugName] = new Bug(thisBoid, bugName);
+                playSound(bugName);
             }
         }
         // Delete the bug if it no longer exists
