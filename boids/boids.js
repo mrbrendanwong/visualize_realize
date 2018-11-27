@@ -403,6 +403,16 @@ var BoidsCanvas = function (canvas) {
     this.maxFileSize = minMaxFile["max"];
     this.minFileSize = minMaxFile["min"];
     console.log("Starting on commit " + this.currentCommit);
+    let commitDisplay = document.getElementById("commitDisplay");
+    commitDisplay.innerText = this.currentCommit;
+    if (this.currentCommit === 0) {
+        let leftArrow = document.getElementById("leftArrowImg");
+        leftArrow.classList.add("disable");
+    }
+    if (this.currentCommit === data.commits.length - 1){
+        let rightArrow = document.getElementById("rightArrowImg");
+        rightArrow.classList.add("disable");
+    }
 
     this.coupling = {};
     // Create the coupling data]
@@ -468,8 +478,7 @@ BoidsCanvas.prototype.init = function () {
         this.canvas.width = this.canvasDiv.size.width = this.canvasDiv.offsetWidth;
         this.canvas.height = this.canvasDiv.size.height = this.canvasDiv.offsetHeight;
 
-        // TODO don't reinitialize boids on resize, scale instead
-        this.initialiseBoids();
+        //this.initialiseBoids();
     }.bind(this));
 
     this.initialiseBoids();
@@ -518,7 +527,14 @@ BoidsCanvas.prototype.changeCommit = function (event) {
                 this.boids[file.fileName].size -= file.diff;
             }.bind(this));
             this.currentCommit--;
-            console.log(this.currentCommit);
+
+            if (this.currentCommit === 0) {
+                let leftArrow = document.getElementById("leftArrowImg");
+                leftArrow.classList.add("disable");
+            } else if (this.currentCommit === data.commits.length - 2){
+                let rightArrow = document.getElementById("rightArrowImg");
+                rightArrow.classList.remove("disable");
+            }
             break;
         case "Right":
         case "ArrowRight":
@@ -534,11 +550,21 @@ BoidsCanvas.prototype.changeCommit = function (event) {
                 }
             }.bind(this));
             console.log(this.currentCommit);
+
+            if (this.currentCommit === 1) {
+                let leftArrow = document.getElementById("leftArrowImg");
+                leftArrow.classList.remove("disable");
+            } else if (this.currentCommit === data.commits.length - 1){
+                let rightArrow = document.getElementById("rightArrowImg");
+                rightArrow.classList.add("disable");
+            }
             break;
         default:
             return;
     }
 
+    let commitDisplay = document.getElementById("commitDisplay");
+    commitDisplay.innerText = this.currentCommit;
     commit = data.commits[this.currentCommit];
 
     // Create the coupling data

@@ -7,7 +7,7 @@
   <body>
     <!-- Live version hosted at: http://codepen.io/MikeC1995/pen/RWXoOe -->
     <div id="boids-canvas"></div>
-    <div id="legend">
+    <div id="legend" class="overlay">
       <div class="row">
         <div class="cell">Java file</div>
         <div class="cell">
@@ -34,6 +34,16 @@
       </div>
     </div>
     <div style="visibility: hidden;">
+    </div>
+
+    <div class="center-wrapper">
+      <div id="controls" class="center-div overlay">
+        <div class="row">
+          <img id="leftArrowImg" class="cell" src="left_arrow.png">
+          <span class="cell">Commit: <span id="commitDisplay"><!--Update current commit here--></span></span>
+          <img id="rightArrowImg" class="cell" src="right_arrow.png">
+        </div>
+      </div>
     </div>
 
     <!-- ******  RESOURCES ****** -->

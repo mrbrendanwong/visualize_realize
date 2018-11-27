@@ -12,7 +12,7 @@ body {
   height: 100%;
 }
 
-#legend {
+.overlay {
   font-family: "Segoe UI", Helvetica, sans-serif;
   font-weight: 500;
 
@@ -20,7 +20,9 @@ body {
   border-radius: 5px;
 
   padding: 10px;
+}
 
+#legend {
   position: absolute;
   bottom: 15px;
   left: 15px;
@@ -34,6 +36,20 @@ body {
   box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
 }
 
+#controls {
+  position: absolute;
+  bottom: 15px;
+  z-index: 1000;
+}
+
+.center-wrapper {
+  text-align: center;
+}
+
+.center-div {
+  display: inline-block;
+}
+
 .row {
   display: table-row;
 }
@@ -41,6 +57,10 @@ body {
 .cell {
   display: table-cell;
   vertical-align: middle;
+}
+
+.disable {
+  opacity: 0.5;
 }
 
 img {
