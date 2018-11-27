@@ -68,6 +68,7 @@ var Boid = function (parent, position, velocity, size, name) {
     this.name = name;
 
     this.bugs = {};
+    // TODO Play a dog sound?
 };
 
 Boid.prototype.draw = function () {
@@ -118,29 +119,66 @@ Boid.prototype.update = function () {
 
 /* Cohesion rule: steer towards average position of local flockmates */
 Boid.prototype.cohesion = function () {
-    var coupling = {};
+    // var coupling = {};
     var sum = new Vector(0, 0); // Average flockmate position
     var count = 0;  // number of local flockmates
 
     // Find your coupling data
-    let commitFiles = data.commits[this.parent.currentCommit].files;
+    /*let commitFiles = data.commits[this.parent.currentCommit].files;
     for (let file in commitFiles) {
         if (commitFiles[file].fileName === this.name) {
             coupling = commitFiles[file].coupling;
             break;
         }
-    }
+    }*/
 
     // For each boid
     for (const [file, other] of Object.entries(this.parent.boids)) {
-        var d = this.position.dist(other.position);
+        let followX = other.position.x;
+        let followY = other.position.y;
+
+        // Didn't wrap
+        let nX = Math.abs(other.position.x - this.position.x);
+        // Went to high and wrapped backwards
+        let highX = Math.abs(other.position.x + this.parent.canvas.width - this.position.x);
+        // Went too low and wrapped forwards
+        let lowX = Math.abs(other.position.x - this.parent.canvas.width - this.position.x);
+
+        if (nX > highX || nX > lowX) {
+            if (highX < lowX) {
+                followX = other.position.x + this.parent.canvas.width;
+            } else {
+                followX = other.position.x - this.parent.canvas.width;
+            }
+        }
+
+        // Didn't wrap
+        let nY = Math.abs(other.position.y - this.position.y);
+        // Went to high and wrapped backwards
+        let highY = Math.abs(other.position.y + this.parent.canvas.height - this.position.y);
+        // Went too low and wrapped forwards
+        let lowY = Math.abs(other.position.y - this.parent.canvas.height - this.position.y);
+
+        if (nY > highY || nY > lowY) {
+            if (highY < lowY) {
+                followY = other.position.y + this.parent.canvas.height;
+            } else {
+                followY = other.position.y - this.parent.canvas.height;
+            }
+        }
+        let followPos = new Vector(followX, followY);
+
+        let d = this.position.dist(followPos);
 
         // If you are too far and coupled, steer towards it
-        if (d > this.parent.visibleRadius && d < this.parent.visibleRadius * 3) {
-            if (coupling[other.name] !== undefined) {
-                let cplMult = coupling[other.name]; // !== undefined ? coupling[other.name] : 0.5;
-                sum = sum.add(other.position.mul(new Vector(cplMult, cplMult)));
-                count++;
+        if (d > this.parent.separationDist) {
+            if (this.parent.coupling[this.name][other.name] !== undefined ||
+                this.parent.coupling[other.name][this.name] !== undefined) {
+                //let cplMult = this.parent.coupling[this.name][other.name]; // !== undefined ? coupling[other.name] : 0.5;
+                let multiplier = Math.max(this.parent.coupling[this.name][other.name] === undefined ? 0 : this.parent.coupling[this.name][other.name],
+                    this.parent.coupling[other.name][this.name] === undefined ? 0 : this.parent.coupling[other.name][this.name]);
+                sum = sum.add(followPos.mul(new Vector(multiplier, multiplier)));
+                count += (1 * multiplier);
             }
         } //else if (d > 0 && d < this.parent.visibleRadius) {
             // If you are close enough to be seen, but not coupled, go away
@@ -173,6 +211,12 @@ Boid.prototype.separation = function () {
             var diff = this.position.sub(other.position);
             diff = diff.normalise();
             diff = diff.div(new Vector(d, d));
+
+            // If you are coupled, don't separate as much
+            /*if (this.parent.coupling[this.name][other.name] !== undefined ||
+                this.parent.coupling[other.name][this.name] !== undefined) {
+                diff = diff.div(new Vector(2, 2));
+            }*/
             steer = steer.add(diff);
             count++;
         }
@@ -199,25 +243,30 @@ Boid.prototype.alignment = function () {
     var count = 0;  // number of local flockmates
 
     // Find your coupling data
-    let commitFiles = data.commits[this.parent.currentCommit].files;
+    /*let commitFiles = data.commits[this.parent.currentCommit].files;
     for (let file in commitFiles) {
         if (commitFiles[file].fileName === this.name) {
             coupling = commitFiles[file].coupling;
             break;
         }
-    }
+    }*/
 
     // For each boid which is close enough to be seen
     for (const [file, other] of Object.entries(this.parent.boids)) {
         var d = this.position.dist(other.position);
-        if (d > 0 && d < this.parent.visibleRadius) {
+        if (d > 0 && d < this.parent.visibleRadius * 2) {
             // If it is not coupled, run away
-            if (coupling[other.name] === undefined) {
-                sum = sum.sub(other.velocity);
+            if (this.parent.coupling[this.name][other.name] === undefined &&
+                this.parent.coupling[other.name][this.name] === undefined) {
+                sum = sum.sub(other.velocity).add(new Vector(Math.random() + 1, Math.random() + 1));
+                count += 1;
             } else {
-                sum = sum.add(other.velocity);
+                let multiplier = Math.max(this.parent.coupling[this.name][other.name] === undefined ? 0 : this.parent.coupling[this.name][other.name],
+                    this.parent.coupling[other.name][this.name] === undefined ? 0 : this.parent.coupling[other.name][this.name]);
+                sum = sum.add(other.velocity.mul(new Vector(multiplier, multiplier)));
+                count += (multiplier);
             }
-            count++;
+            // count++;
         }
     }
 
@@ -282,6 +331,7 @@ var Bug = function (parent, type) {
     let dist = this.parent.position.dist(this.position);
 
     this.velocity = diff.mul(new Vector(dist / this.followDistance, dist / this.followDistance));
+    // TODO play a bug sound?
 };
 
 Bug.prototype.draw = function() {
@@ -387,6 +437,16 @@ var BoidsCanvas = function (canvas) {
     this.maxFileSize = minMaxFile["max"];
     this.minFileSize = minMaxFile["min"];
     console.log("Starting on commit " + this.currentCommit);
+
+    this.coupling = {};
+    // Create the coupling data]
+    let commitFiles = data.commits[this.currentCommit].files;
+    for (let file in commitFiles) {
+        this.coupling[commitFiles[file].fileName] = commitFiles[file].coupling;
+        //if (commitFiles[file].fileName === this.name) {
+        //    coupling = commitFiles[file].coupling;
+        //    break;
+    }
 
     // Images
     this.boidImage = document.getElementById("dogImg");
@@ -514,6 +574,16 @@ BoidsCanvas.prototype.changeCommit = function (event) {
     }
 
     commit = data.commits[this.currentCommit];
+
+    // Create the coupling data
+    let commitFiles = commit.files;
+    for (let file in commitFiles) {
+        this.coupling[commitFiles[file].fileName] = commitFiles[file].coupling;
+        //if (commitFiles[file].fileName === this.name) {
+        //    coupling = commitFiles[file].coupling;
+        //    break;
+        //}
+    }
 
     // Delete boids if file was deleted
     let fileList = commit.files.map(file => file.fileName);
