@@ -1,17 +1,47 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>BoidsCanvas</title>
+    <title>Doids</title>
     <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
     <!-- Live version hosted at: http://codepen.io/MikeC1995/pen/RWXoOe -->
     <div id="boids-canvas"></div>
-    <div style="visibility: hidden;">
-      <img id="dogImg" src="dog.png">
-      <img id="ghostImg" src="ghost.png">
-      <img id="lightningImg" src="lightning.png">
-      <img id="bombImg" src="bomb.png">
+    <div id="legend" class="overlay">
+      <div class="row">
+        <div class="cell">Java Source File</div>
+        <div class="cell">
+          <img id="dogImg" src="dog.png">
+        </div>
+      </div>
+      <div class="row">
+        <div class="cell">Useless Parentheses</div>
+        <div class="cell">
+          <img id="ghostImg" src="ghost.png">
+        </div>
+      </div>
+      <div class="row">
+        <div class="cell">Control Statement Braces</div>
+        <div class="cell">
+          <img id="lightningImg" src="lightning.png">
+        </div>
+      </div>
+      <div class="row">
+        <div class="cell">Loose Coupling</div>
+        <div class="cell">
+          <img id="bombImg" src="bomb.png">
+        </div>
+      </div>
+    </div>
+
+    <div class="center-wrapper">
+      <div id="controls" class="center-div overlay">
+        <div class="row">
+          <img id="leftArrowImg" class="cell" src="left_arrow.png">
+          <span id="commitDisplay" class="cell">Commit: <span id="commitNumber"><!--Update current commit here--></span></span>
+          <img id="rightArrowImg" class="cell" src="right_arrow.png">
+        </div>
+      </div>
     </div>
 
     <!-- ******  RESOURCES ****** -->

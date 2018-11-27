@@ -6,3 +6,4 @@ api_key.json
 *tmpFiles*
 .vscode
 /resources/pmd
+boids/results.js
