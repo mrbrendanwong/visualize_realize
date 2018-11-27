@@ -100,16 +100,50 @@ Boid.prototype.cohesion = function () {
 
     // For each boid
     for (const [file, other] of Object.entries(this.parent.boids)) {
-        var d = this.position.dist(other.position);
+        let followX = other.position.x;
+        let followY = other.position.y;
+
+        // Didn't wrap
+        let nX = Math.abs(other.position.x - this.position.x);
+        // Went to high and wrapped backwards
+        let highX = Math.abs(other.position.x + this.parent.canvas.width - this.position.x);
+        // Went too low and wrapped forwards
+        let lowX = Math.abs(other.position.x - this.parent.canvas.width - this.position.x);
+
+        if (nX > highX || nX > lowX) {
+            if (highX < lowX) {
+                followX = other.position.x + this.parent.canvas.width;
+            } else {
+                followX = other.position.x - this.parent.canvas.width;
+            }
+        }
+
+        // Didn't wrap
+        let nY = Math.abs(other.position.y - this.position.y);
+        // Went to high and wrapped backwards
+        let highY = Math.abs(other.position.y + this.parent.canvas.height - this.position.y);
+        // Went too low and wrapped forwards
+        let lowY = Math.abs(other.position.y - this.parent.canvas.height - this.position.y);
+
+        if (nY > highY || nY > lowY) {
+            if (highY < lowY) {
+                followY = other.position.y + this.parent.canvas.height;
+            } else {
+                followY = other.position.y - this.parent.canvas.height;
+            }
+        }
+        let followPos = new Vector(followX, followY);
+
+        let d = this.position.dist(followPos);
 
         // If you are too far and coupled, steer towards it
-        if (d > this.parent.separationDist && d < this.parent.visibleRadius * 2) {
+        if (d > this.parent.separationDist) {
             if (this.parent.coupling[this.name][other.name] !== undefined ||
                 this.parent.coupling[other.name][this.name] !== undefined) {
                 //let cplMult = this.parent.coupling[this.name][other.name]; // !== undefined ? coupling[other.name] : 0.5;
                 let multiplier = Math.max(this.parent.coupling[this.name][other.name] === undefined ? 0 : this.parent.coupling[this.name][other.name],
                     this.parent.coupling[other.name][this.name] === undefined ? 0 : this.parent.coupling[other.name][this.name]);
-                sum = sum.add(other.position.mul(new Vector(multiplier, multiplier)));
+                sum = sum.add(followPos.mul(new Vector(multiplier, multiplier)));
                 count += (1 * multiplier);
             }
         } //else if (d > 0 && d < this.parent.visibleRadius) {
