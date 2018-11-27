@@ -423,8 +423,8 @@ var BoidsCanvas = function (canvas) {
     this.maxFileSize = minMaxFile["max"];
     this.minFileSize = minMaxFile["min"];
 
-    let commitDisplay = document.getElementById("commitDisplay");
-    commitDisplay.innerText = this.currentCommit;
+    let commitNumber = document.getElementById("commitNumber");
+    commitNumber.innerText = this.currentCommit;
     if (this.currentCommit === 0) {
         let leftArrow = document.getElementById("leftArrowImg");
         leftArrow.classList.add("disable");
@@ -590,8 +590,8 @@ BoidsCanvas.prototype.changeCommit = function (event) {
             return;
     }
 
-    let commitDisplay = document.getElementById("commitDisplay");
-    commitDisplay.innerText = this.currentCommit;
+    let commitNumber = document.getElementById("commitNumber");
+    commitNumber.innerText = this.currentCommit;
     commit = data.commits[this.currentCommit];
 
     // Create the coupling data

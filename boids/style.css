@@ -52,6 +52,11 @@ body {
   z-index: 1000;
 }
 
+#commitDisplay {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 .center-wrapper {
   text-align: center;
 }
